@@ -10,7 +10,10 @@
 /* Header */
 
 	#header {
-		background: #455372 url("header_bl.png") bottom left repeat-x;
+		/*background: #455372 url("header_bl.png") bottom left repeat-x;*/
+                background: #262626;
+                border-radius: 5px;
+                -moz-border-radius: 5px;
 		position: relative;
 		min-height: 39px;
 		height: 3em;
