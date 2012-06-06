@@ -88,13 +88,13 @@
     #header ul li.selected a
     {
         background-position: 0% -200px;
-        color: #455372;
+        color: #666;
     }
 
     #header ul li.selected
     {
         background-position: 100% -200px;
-        border-bottom: 1px solid #fff;
+        /*border-bottom: 1px solid #fff;*/
     }
 
     /* header tabs mouseover effects */
