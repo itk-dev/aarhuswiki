@@ -68,7 +68,10 @@
 		color: #fff;
 		text-decoration: none;
 	}
-	#header ul li:hover a { background-position: 0% -400px; }
+	#header ul li:hover a { 
+                /*background-position: 0% -400px;*/
+                text-decoration: underline;
+        }
 	#header ul li:hover { background-position: 100% -400px; }
 
 	body.sectionAbout li#menu_aboutus a,
@@ -86,7 +89,7 @@
 	body.sectionDevelopers li#menu_developers,
 	body.sectionStore li#menu_store {
 		background-position: 100% -200px;
-		border-bottom: 1px solid #fff;
+		/*border-bottom: 1px solid #fff;*/
 	}
 
 	body.sectionAbout li#menu_aboutus:hover,
