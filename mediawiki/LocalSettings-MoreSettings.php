@@ -1,7 +1,7 @@
 <?php
 #
 # This file must NOT contain any sensitiv information
-# 
+# This file are located on GitHub 
 #
 
 ## CAVENDISH SETTINGS
