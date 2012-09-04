@@ -66,7 +66,7 @@ class CavendishMWTemplate extends BaseTemplate {
 
         // Set cavendishmw specific variables.
         $cavendishShowSitename = isset($cavendishShowSitename) ? $cavendishShowSitename : true;
-        $cavendishSitenameIndent = isset($cavendishSitenameIndent) ? $cavendishSitenameIndent : '2em';
+        $cavendishSitenameIndent = isset($cavendishSitenameIndent) ? $cavendishSitenameIndent : '0.8em';
         $cavendishLogoWidth = isset($cavendishLogoWidth) ? $cavendishLogoWidth : 'auto';
         $cavendishLogoHeight = isset($cavendishLogoHeight) ? $cavendishLogoHeight : 'auto';
         $this->set('sitenameindent', $cavendishSitenameIndent);
@@ -206,8 +206,9 @@ class CavendishMWTemplate extends BaseTemplate {
 	    // Generate additional footer links
 	    $footerlinks = array(
 		    //'lastmod', 'viewcount',
-		    'numberofwatchingusers', 'credits', 'copyright',
-		    'privacy', 'about', 'disclaimer', 'tagline',
+		    // 'privacy', 'about', 'disclaimer', 'tagline', 'numberofwatchingusers', 'credits', - CJK disse har jeg fjernet
+		    'copyright',
+		    
 	    );
 	    ?>
 

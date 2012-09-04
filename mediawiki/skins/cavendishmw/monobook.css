@@ -908,9 +908,9 @@ li#ca-watch, li#ca-unwatch, li#ca-varlang-0, li#ca-print {
 	margin: 0 1.3em;
 }
 #f-poweredbyico, #f-copyrightico {
-	margin: 0 8px;
+	margin: 0px; /* CJK original 0 8px */
 	position: relative;
-	top: -2px; /* Bump it up just a tad */
+	top: -1px; /* CJK original -2px */ /* Bump it up just a tad */
 }
 #f-poweredbyico {
 	float: right;

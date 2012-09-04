@@ -23,14 +23,14 @@
 
 	#side {
 		float: left;
-		width: 20%; /* cevendish: 23% */
+		width: 18%; /* cevendish: 23% */
 		margin-bottom: 1em;
 	}
 
 	#mainContent {
 		font-size: 100%;
 		float: right;
-		width: 78%; /* cevendish: 75% */
+		width: 80%; /* cevendish: 75% */
 		margin-bottom: 1em;
 	}
 	.nomenu #mainContent {
