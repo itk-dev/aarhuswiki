@@ -88,7 +88,7 @@
     #header ul li.selected a
     {
         background-position: 0% -200px;
-        color: #666;
+        color: #141414; /* CJK #666 */
     }
 
     #header ul li.selected
@@ -117,9 +117,9 @@
         color: #FFFFFF;
         font-size: 1.7em;
         position: relative;
-        text-shadow: 1px 1px 2px #000;
-        text-indent: 1.7em;
-        text-transform: lowercase;
+        /* text-shadow: 1px 1px 2px #000; */
+        text-indent: 0.5em; /* CJK original 1.7em */
+        /* text-transform: lowercase; */
         top: -3px;
     }
 
