@@ -60,7 +60,7 @@
 
 #mainContent p {
     line-height: 1.5em;
-    text-align: justify;
+    /* text-align: justify;  CJK */
 }
 
 /* Random HTML Styles */
@@ -125,9 +125,10 @@ li#pt-login {
 
 /* General Structure */
 body {
-    font-family: sans-serif;
+    font-family: "Helvetica-Neue", Verdana, sans-serif; /*CJK Helvetica tilføjet*/
+    font: 11pt "Helvetica-Neue", Verdana, sans-serif; /* CJK min tilføjelse */
     font-size: 0.8em;
-    color: #000;
+    color: #505050; /* CJK my color-choice */
 }
 
 input {
@@ -136,14 +137,18 @@ input {
 
 h1, h2, h3, h4, h5, h6 {
     margin: 1em 0 0.3em 0;
-    font-family: Ubuntu, sans-serif;
+    font-family: "Helvetica-Neue", Verdana, sans-serif;
+    /* font-family: Ubuntu, sans-serif; */
 }
 
 h6 { font-size: 90%;  }
 
+/*
+CJK fjernet
 h1, h2 {
 	text-shadow: 1px 1px 2px #A5A5A5;
 }
+*/
 
 li h1, li h2, li h3, li h4, li h5, li h6 {
 	border: none;
@@ -474,7 +479,8 @@ address {
 	border-bottom: 0px solid #999999;
 	margin: .6em 0 1em 0;
 	padding: .4em 0 1.2em 0;
-	text-align: center;
+	text-align: left;
+	/* text-align: center; */
 	font-size: 90%;
 	color: #666666;
 }

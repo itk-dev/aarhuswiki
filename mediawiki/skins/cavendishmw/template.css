@@ -64,7 +64,7 @@
 		display: block;
 		padding: 4px 4px 4px 10px;
 		/*background: transparent url("header_tab.gif") 0% -600px no-repeat;*/
-		font-weight: bold;
+		font-weight: normal; /* CJK var 'bold' */
 		color: #fff;
 		text-decoration: none;
 	}

@@ -112,7 +112,8 @@
 
     #header h1 a {
         /*background: transparent url("wiki_header_logo.gif") no-repeat scroll 5px -5px; */
-        font-family: Ubuntu, "Trebuchet MS", Helvetica, sans-serif;
+        font-family: "Helvetica-Neue", Verdana, sans-serif;
+        /* font-family: Ubuntu, "Trebuchet MS", Helvetica, sans-serif; */
         color: #FFFFFF;
         font-size: 1.7em;
         position: relative;

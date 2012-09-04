@@ -9,7 +9,7 @@
 */
 
 /* Try to use custom fonts trough CSS3 (opera 10+, safari 3.1+ and ff 3.5+) */
-@import url(http://fonts.googleapis.com/css?family=Ubuntu);
+/* @import url(http://fonts.googleapis.com/css?family=Ubuntu); */
 
 /* Inherit styles from monobook */
 @import url("monobook.css");
