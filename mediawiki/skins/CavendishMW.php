@@ -136,9 +136,9 @@ class CavendishMWTemplate extends BaseTemplate {
 		<div id="side" class="noprint"> <!-- cavendish-mw / monobook: column-one -->
 			<ul id="nav">
                 <?php
-                // Display Personal Tools block.
-                $this->personalTools();
-
+				// Display Personal Tools block.
+                //$this->personalTools(); // CJK my commenting out, placed below
+                
                 // Display other Navigation blocks.
                 $sidebar = $this->data['sidebar'];
 
@@ -162,6 +162,8 @@ class CavendishMWTemplate extends BaseTemplate {
                         $this->customBox( $boxName, $cont );
                     }
                 }
+                // CJK: I placed it down here 
+                $this->personalTools();
                 ?>
 			</ul>
 		</div><!-- end of SIDE div -->
