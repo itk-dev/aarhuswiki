@@ -481,6 +481,11 @@ address {
 	padding: .4em 0 1.2em 0;
 	text-align: left;
 	/* text-align: center; */
-	font-size: 90%;
+	font-size: 80%;
 	color: #666666;
+}
+
+/* CJK TILFØJELSER */
+li#t-whatlinkshere, li#t-recentchangeslinked, li#t-print, #footer li.noprint, #footer li#viewcount {
+	display: none;
 }

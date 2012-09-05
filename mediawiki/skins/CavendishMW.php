@@ -206,8 +206,8 @@ class CavendishMWTemplate extends BaseTemplate {
 	    // Generate additional footer links
 	    $footerlinks = array(
 		    //'lastmod', 'viewcount',
-		    // 'privacy', 'about', 'disclaimer', 'tagline', 'numberofwatchingusers', 'credits', - CJK disse har jeg fjernet
-		    'copyright',
+		    // 'privacy', 'tagline', 'numberofwatchingusers', 'credits', - CJK disse har jeg fjernet
+		    'copyright', 'about', 'disclaimer',
 		    
 	    );
 	    ?>
@@ -219,6 +219,15 @@ class CavendishMWTemplate extends BaseTemplate {
 		        <li id="<?php echo $aLink ?>"><?php $this->html($aLink) ?></li>
         <?php } } ?>
         </ul>
+
+        <!-- CJK denne ul er min tilføjelse -->
+        <ul>
+        	<li>
+        		Tekst er tilgængelig under en
+        		<a rel="License" href="http://creativecommons.org/licenses/by/3.0/deed.da">Creative Commons Navngivelse licens</a>.
+        		Yderligere betingelser kan være gældende.
+        </ul> 
+
 
         <?php
 	    $validFooterLinks = array();

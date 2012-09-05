@@ -50,7 +50,7 @@
 	#header li {
 		float: right;
 		/*background: transparent url("header_tab.gif") 100% -600px no-repeat;*/
-                background-color: #8087AC; /* CJK original #1a1a1a */
+                background-color: #8D8DA0; /* CJK original #1a1a1a */
                 border-top-left-radius: 10px;
                 border-top-right-radius: 10px;
                 -moz-border-top-left-radius: 10px;
@@ -175,7 +175,7 @@
 		list-style: none;
 	}
 	#nav {
-		margin-bottom: 1em;
+		margin-bottom: 1.5em;
 	}
 	#nav li {
 		display: inline;
