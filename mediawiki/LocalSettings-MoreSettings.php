@@ -10,3 +10,4 @@ $cavendishLogoMargin = '10';
 
 # include("$IP/extensions/JavaScript/JavaScript.php");
 include("$IP/extensions/googleAnalytics/googleAnalytics.php" );
+include("$IP/extensions/NewestPages/NewestPages.php" );
