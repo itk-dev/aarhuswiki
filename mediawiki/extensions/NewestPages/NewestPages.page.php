@@ -69,11 +69,11 @@ class NewestPages extends IncludableSpecialPage {
 			if( !$this->mIncluding )
 				
 				$wgOut->addWikiMsg( 'newestpages-showing', $wgLang->formatNum($count) );
-			$wgOut->addHTML( "<ol>" );
+			$wgOut->addHTML( "<ul>" );
 			foreach ( $res as $row ) {
 				$wgOut->addHTML( $this->makeListItem( $row ) );
 			}
-			$wgOut->addHTML( "</ol>" );
+			$wgOut->addHTML( "</ul>" );
 		} else {
 			$wgOut->addWikiMsg( 'newestpages-none' );
 		}
