@@ -16,4 +16,4 @@ include("$IP/extensions/NewestPages/NewestPages.php" );
 require_once( "$IP/extensions/ConfirmEdit/ConfirmEdit.php" );
 require_once("$IP/extensions/ConfirmEdit/QuestyCaptcha.php"); 
 $wgCaptchaClass = 'QuestyCaptcha';
-$wgCaptchaQuestions[] = array( 'question' => "Indtast tallet '2012' i feltet", 'answer' => "2012" );
+$wgCaptchaQuestions[] = array( 'question' => "Indtast postnummeret for Aarhus C i feltet", 'answer' => "8000" );
