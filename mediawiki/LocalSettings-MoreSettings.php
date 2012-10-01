@@ -25,3 +25,6 @@ $wgGroupPermissions['bureaucrat']['usermerge'] = true;
  
 // optional: default is array( 'sysop' )
 $wgUserMergeProtectedGroups = array( 'bureaucrat' );
+
+#RenameUser
+require_once("$IP/extensions/Renameuser/Renameuser.php");
