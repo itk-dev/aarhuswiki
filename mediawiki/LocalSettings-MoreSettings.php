@@ -26,7 +26,7 @@ $wgGroupPermissions['bureaucrat']['usermerge'] = true;
 // optional: default is array( 'sysop' )
 $wgUserMergeProtectedGroups = array( 'bureaucrat' );
 
-#RenameUser
+#Renameuser
 require_once("$IP/extensions/Renameuser/Renameuser.php");
 
 #WikiEditor - inklusion af parametre var også nødvendigt
