@@ -485,7 +485,7 @@ address {
 	color: #666666;
 }
 
-/* CJK TILFØJELSER */
-li#t-whatlinkshere, li#t-recentchangeslinked, li#t-print, #footer li.noprint, #footer li#viewcount {
+/* CJK TILFØJELSER - li#t-whatlinkshere, */
+li#t-recentchangeslinked, li#t-print, #footer li.noprint, #footer li#viewcount {
 	display: none;
 }
