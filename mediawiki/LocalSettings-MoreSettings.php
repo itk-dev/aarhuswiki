@@ -1,7 +1,7 @@
 <?php
 #
-# This file must NOT contain any sensitiv information
-# This file are located on GitHub 
+# This file must NOT contain any sensitive information
+# This file is located on GitHub 
 #
 
 ## CAVENDISH SETTINGS
@@ -29,8 +29,11 @@ $wgUserMergeProtectedGroups = array( 'bureaucrat' );
 #Renameuser
 require_once("$IP/extensions/Renameuser/Renameuser.php");
 
-#WikiEditor - inklusion af parametre var også nødvendigt
+#WikiEditor - inklusion af nedenstående parametre var også nødvendigt
 require_once("$IP/extensions/WikiEditor/WikiEditor.php");
 $wgDefaultUserOptions['usebetatoolbar'] = 1;
 $wgDefaultUserOptions['usebetatoolbar-cgd'] = 1;
 $wgDefaultUserOptions['wikieditor-preview'] = 1;
+
+#Cite
+require_once("$IP/extensions/Cite/Cite.php");
