@@ -36,4 +36,4 @@ $wgDefaultUserOptions['usebetatoolbar-cgd'] = 1;
 $wgDefaultUserOptions['wikieditor-preview'] = 1;
 
 #Cite
-require_once("$IP/extensions/Cite/Cite.php");
+#require_once("$IP/extensions/Cite/Cite.php");
