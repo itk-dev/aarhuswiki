@@ -38,5 +38,8 @@ $wgDefaultUserOptions['wikieditor-preview'] = 1;
 #Cite
 require_once("$IP/extensions/Cite/Cite.php");
 
+# New responsive skin
+require_once( "$IP/skins/filament/filament.php" );
+
 # Åben eksterne links i nye vinduer
 $wgExternalLinkTarget = '_blank';
