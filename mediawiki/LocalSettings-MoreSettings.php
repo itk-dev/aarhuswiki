@@ -37,3 +37,6 @@ $wgDefaultUserOptions['wikieditor-preview'] = 1;
 
 #Cite
 require_once("$IP/extensions/Cite/Cite.php");
+
+# Åben eksterne links i nye vinduer
+$wgExternalLinkTarget = '_blank';
