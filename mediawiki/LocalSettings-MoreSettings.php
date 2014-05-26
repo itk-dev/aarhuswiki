@@ -43,3 +43,8 @@ require_once( "$IP/skins/filament/filament.php" );
 
 # Åben eksterne links i nye vinduer
 $wgExternalLinkTarget = '_blank';
+
+## CustomNamespaces
+$wgExtraNamespaces[3000] = "HistorieHotellet";
+$wgExtraNamespaces[3001] = "HistorieHotellet_talk";
+$wgContentNamespaces[] = 3000;
