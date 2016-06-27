@@ -1239,27 +1239,6 @@ diff
 </td><td>
 {{int:Difference}}
 </td></tr><tr><td>
-[http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Disambiguations&action=edit disambiguations]<br>
-[[MediaWiki_talk:Disambiguations|Talk]]
-</td><td>
-Disambiguation pages
-</td><td>
-{{int:Disambiguations}}
-</td></tr><tr><td>
-[http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Disambiguationspage&action=edit disambiguationspage]<br>
-[[MediaWiki_talk:Disambiguationspage|Talk]]
-</td><td>
-Wiktionary:Links_to_disambiguating_pages
-</td><td>
-{{int:Disambiguationspage}}
-</td></tr><tr><td>
-[http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Disambiguationstext&action=edit disambiguationstext]<br>
-[[MediaWiki_talk:Disambiguationstext|Talk]]
-</td><td>
-The following pages link to a &lt;i&gt;disambiguation page&lt;/i&gt;. They should link to the appropriate topic instead.&lt;br /&gt;A page is treated as dismbiguation if it is linked from $1.&lt;br /&gt;Links from other namespaces are &lt;i&gt;not&lt;/i&gt; listed here.
-</td><td>
-{{int:Disambiguationstext}}
-</td></tr><tr><td>
 [http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Disclaimerpage&action=edit disclaimerpage]<br>
 [[MediaWiki_talk:Disclaimerpage|Talk]]
 </td><td>
@@ -1391,12 +1370,12 @@ Message
 </td><td>
 {{int:Emailmessage}}
 </td></tr><tr><td>
-[http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Emailpage&action=edit emailpage]<br>
-[[MediaWiki_talk:Emailpage|Talk]]
+[http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Emailuser&action=edit emailuser]<br>
+[[MediaWiki_talk:Emailuser|Talk]]
 </td><td>
 E-mail user
 </td><td>
-{{int:Emailpage}}
+{{int:Emailuser}}
 </td></tr><tr><td>
 [http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Emailpagetext&action=edit emailpagetext]<br>
 [[MediaWiki_talk:Emailpagetext|Talk]]
@@ -2227,13 +2206,6 @@ You did not check the confirmation box.
 Log in
 </td><td>
 {{int:Login}}
-</td></tr><tr><td>
-[http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Loginend&action=edit loginend]<br>
-[[MediaWiki_talk:Loginend|Talk]]
-</td><td>
-&amp;nbsp;
-</td><td>
-{{int:Loginend}}
 </td></tr><tr><td>
 [http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Loginerror&action=edit loginerror]<br>
 [[MediaWiki_talk:Loginerror|Talk]]
@@ -3221,13 +3193,6 @@ About
 </td><td>
 {{int:Nstab-wp}}
 </td></tr><tr><td>
-[http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Nviews&action=edit nviews]<br>
-[[MediaWiki_talk:Nviews|Talk]]
-</td><td>
-$1 views
-</td><td>
-{{int:Nviews}}
-</td></tr><tr><td>
 [http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Ok&action=edit ok]<br>
 [[MediaWiki_talk:Ok|Talk]]
 </td><td>
@@ -3346,13 +3311,6 @@ Here&#39;s a saved copy from $1:
 Personal tools
 </td><td>
 {{int:Personaltools}}
-</td></tr><tr><td>
-[http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Popularpages&action=edit popularpages]<br>
-[[MediaWiki_talk:Popularpages|Talk]]
-</td><td>
-Popular pages
-</td><td>
-{{int:Popularpages}}
 </td></tr><tr><td>
 [http://tl.wiktionary.org/w/wiki.phtml?title=MediaWiki:Portal&action=edit portal]<br>
 [[MediaWiki_talk:Portal|Talk]]

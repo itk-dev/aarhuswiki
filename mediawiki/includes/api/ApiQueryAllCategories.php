@@ -4,7 +4,7 @@
  *
  * Created on December 12, 2007
  *
- * Copyright © 2007 Roan Kattouw <Firstname>.<Lastname>@gmail.com
+ * Copyright © 2007 Roan Kattouw "<Firstname>.<Lastname>@gmail.com"
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
  */
 class ApiQueryAllCategories extends ApiQueryGeneratorBase {
 
-	public function __construct( $query, $moduleName ) {
+	public function __construct( ApiQuery $query, $moduleName ) {
 		parent::__construct( $query, $moduleName, 'ac' );
 	}
 
@@ -49,7 +49,7 @@ class ApiQueryAllCategories extends ApiQueryGeneratorBase {
 	}
 
 	/**
-	 * @param $resultPageSet ApiPageSet
+	 * @param ApiPageSet $resultPageSet
 	 */
 	private function run( $resultPageSet = null ) {
 		$db = $this->getDB();
@@ -58,21 +58,40 @@ class ApiQueryAllCategories extends ApiQueryGeneratorBase {
 		$this->addTables( 'category' );
 		$this->addFields( 'cat_title' );
 
+		if ( !is_null( $params['continue'] ) ) {
+			$cont = explode( '|', $params['continue'] );
+			$this->dieContinueUsageIf( count( $cont ) != 1 );
+			$op = $params['dir'] == 'descending' ? '<' : '>';
+			$cont_from = $db->addQuotes( $cont[0] );
+			$this->addWhere( "cat_title $op= $cont_from" );
+		}
+
 		$dir = ( $params['dir'] == 'descending' ? 'older' : 'newer' );
-		$from = ( is_null( $params['from'] ) ? null : $this->titlePartToKey( $params['from'] ) );
-		$to = ( is_null( $params['to'] ) ? null : $this->titlePartToKey( $params['to'] ) );
+		$from = ( $params['from'] === null
+			? null
+			: $this->titlePartToKey( $params['from'], NS_CATEGORY ) );
+		$to = ( $params['to'] === null
+			? null
+			: $this->titlePartToKey( $params['to'], NS_CATEGORY ) );
 		$this->addWhereRange( 'cat_title', $dir, $from, $to );
 
 		$min = $params['min'];
 		$max = $params['max'];
-		$this->addWhereRange( 'cat_pages', $dir, $min, $max );
+		if ( $dir == 'newer' ) {
+			$this->addWhereRange( 'cat_pages', 'newer', $min, $max );
+		} else {
+			$this->addWhereRange( 'cat_pages', 'older', $max, $min );
+		}
 
 		if ( isset( $params['prefix'] ) ) {
-			$this->addWhere( 'cat_title' . $db->buildLike( $this->titlePartToKey( $params['prefix'] ), $db->anyString() ) );
+			$this->addWhere( 'cat_title' . $db->buildLike(
+				$this->titlePartToKey( $params['prefix'], NS_CATEGORY ),
+				$db->anyString() ) );
 		}
 
 		$this->addOption( 'LIMIT', $params['limit'] + 1 );
-		$this->addOption( 'ORDER BY', 'cat_title' . ( $params['dir'] == 'descending' ? ' DESC' : '' ) );
+		$sort = ( $params['dir'] == 'descending' ? ' DESC' : '' );
+		$this->addOption( 'ORDER BY', 'cat_title' . $sort );
 
 		$prop = array_flip( $params['prop'] );
 		$this->addFieldsIf( array( 'cat_pages', 'cat_subcats', 'cat_files' ), isset( $prop['size'] ) );
@@ -86,7 +105,7 @@ class ApiQueryAllCategories extends ApiQueryGeneratorBase {
 					'pp_page=page_id',
 					'pp_propname' => 'hiddencat' ) ),
 			) );
-			$this->addFields( 'pp_propname AS cat_hidden' );
+			$this->addFields( array( 'cat_hidden' => 'pp_propname' ) );
 		}
 
 		$res = $this->select( __METHOD__ );
@@ -96,39 +115,39 @@ class ApiQueryAllCategories extends ApiQueryGeneratorBase {
 		$result = $this->getResult();
 		$count = 0;
 		foreach ( $res as $row ) {
-			if ( ++ $count > $params['limit'] ) {
-				// We've reached the one extra which shows that there are additional cats to be had. Stop here...
-				// TODO: Security issue - if the user has no right to view next title, it will still be shown
-				$this->setContinueEnumParameter( 'from', $this->keyToTitle( $row->cat_title ) );
+			if ( ++$count > $params['limit'] ) {
+				// We've reached the one extra which shows that there are
+				// additional cats to be had. Stop here...
+				$this->setContinueEnumParameter( 'continue', $row->cat_title );
 				break;
 			}
 
 			// Normalize titles
 			$titleObj = Title::makeTitle( NS_CATEGORY, $row->cat_title );
 			if ( !is_null( $resultPageSet ) ) {
-				$pages[] = $titleObj->getPrefixedText();
+				$pages[] = $titleObj;
 			} else {
 				$item = array();
-				$result->setContent( $item, $titleObj->getText() );
+				ApiResult::setContentValue( $item, 'category', $titleObj->getText() );
 				if ( isset( $prop['size'] ) ) {
 					$item['size'] = intval( $row->cat_pages );
 					$item['pages'] = $row->cat_pages - $row->cat_subcats - $row->cat_files;
 					$item['files'] = intval( $row->cat_files );
 					$item['subcats'] = intval( $row->cat_subcats );
 				}
-				if ( isset( $prop['hidden'] ) && $row->cat_hidden ) {
-					$item['hidden'] = '';
+				if ( isset( $prop['hidden'] ) ) {
+					$item['hidden'] = (bool)$row->cat_hidden;
 				}
 				$fit = $result->addValue( array( 'query', $this->getModuleName() ), null, $item );
 				if ( !$fit ) {
-					$this->setContinueEnumParameter( 'from', $this->keyToTitle( $row->cat_title ) );
+					$this->setContinueEnumParameter( 'continue', $row->cat_title );
 					break;
 				}
 			}
 		}
 
 		if ( is_null( $resultPageSet ) ) {
-			$result->setIndexedTagName_internal( array( 'query', $this->getModuleName() ), 'c' );
+			$result->addIndexedTagName( array( 'query', $this->getModuleName() ), 'c' );
 		} else {
 			$resultPageSet->populateFromTitles( $pages );
 		}
@@ -137,6 +156,9 @@ class ApiQueryAllCategories extends ApiQueryGeneratorBase {
 	public function getAllowedParams() {
 		return array(
 			'from' => null,
+			'continue' => array(
+				ApiBase::PARAM_HELP_MSG => 'api-help-param-continue',
+			),
 			'to' => null,
 			'prefix' => null,
 			'dir' => array(
@@ -164,44 +186,22 @@ class ApiQueryAllCategories extends ApiQueryGeneratorBase {
 			'prop' => array(
 				ApiBase::PARAM_TYPE => array( 'size', 'hidden' ),
 				ApiBase::PARAM_DFLT => '',
-				ApiBase::PARAM_ISMULTI => true
+				ApiBase::PARAM_ISMULTI => true,
+				ApiBase::PARAM_HELP_MSG_PER_VALUE => array(),
 			),
 		);
 	}
 
-	public function getParamDescription() {
+	protected function getExamplesMessages() {
 		return array(
-			'from' => 'The category to start enumerating from',
-			'to' => 'The category to stop enumerating at',
-			'prefix' => 'Search for all category titles that begin with this value',
-			'dir' => 'Direction to sort in',
-			'min' => 'Minimum number of category members',
-			'max' => 'Maximum number of category members',
-			'limit' => 'How many categories to return',
-			'prop' => array(
-				'Which properties to get',
-				' size    - Adds number of pages in the category',
-				' hidden  - Tags categories that are hidden with __HIDDENCAT__',
-			),
-		);
-	}
-
-	public function getDescription() {
-		return 'Enumerate all categories';
-	}
-
-	public function getExamples() {
-		return array(
-			'api.php?action=query&list=allcategories&acprop=size',
-			'api.php?action=query&generator=allcategories&gacprefix=List&prop=info',
+			'action=query&list=allcategories&acprop=size'
+				=> 'apihelp-query+allcategories-example-size',
+			'action=query&generator=allcategories&gacprefix=List&prop=info'
+				=> 'apihelp-query+allcategories-example-generator',
 		);
 	}
 
 	public function getHelpUrls() {
 		return 'https://www.mediawiki.org/wiki/API:Allcategories';
-	}
-
-	public function getVersion() {
-		return __CLASS__ . ': $Id$';
 	}
 }

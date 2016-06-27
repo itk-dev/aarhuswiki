@@ -13,9 +13,9 @@
 
 class NewestPages extends IncludableSpecialPage {
 
-	var $limit = null;
-	var $namespace = null;
-	var $redirects = null;
+	public $limit = null;
+	public $namespace = null;
+	public $redirects = null;
 
 	public function __construct() {
 		parent::__construct( 'NewestPages', '', true, false, 'default', true );
@@ -55,7 +55,8 @@ class NewestPages extends IncludableSpecialPage {
 			$this->setHeaders();
 			$limit = $wgLang->formatNum( $this->limit );
 			if( $this->namespace > 0 ) {
-				$wgOut->addWikiMsg( 'newestpages-ns-header', $limit, $wgContLang->getFormattedNsText( $this->namespace ) );
+				$wgOut->addWikiMsg( 'newestpages-ns-header', $limit,
+					$wgContLang->getFormattedNsText( $this->namespace ) );
 			} else {
 				$wgOut->addWikiMsg( 'newestpages-header', $limit );
 			}
@@ -67,18 +68,21 @@ class NewestPages extends IncludableSpecialPage {
 		if( $count > 0 ) {
 			# Make list
 			if( !$this->mIncluding )
-				
+
 				$wgOut->addWikiMsg( 'newestpages-showing', $wgLang->formatNum($count) );
-			$wgOut->addHTML( "<ul>" );
+			$wgOut->addHTML( "<ol>" );
 			foreach ( $res as $row ) {
 				$wgOut->addHTML( $this->makeListItem( $row ) );
 			}
-			$wgOut->addHTML( "</ul>" );
+			$wgOut->addHTML( "</ol>" );
 		} else {
 			$wgOut->addWikiMsg( 'newestpages-none' );
 		}
 	}
 
+	/**
+	 * @param WebRequest $req
+	 */
 	function setOptions( &$req ) {
 		global $wgNewestPagesLimit;
 		if( !isset( $this->limit ) )
@@ -125,16 +129,15 @@ class NewestPages extends IncludableSpecialPage {
 	}
 
 	function makeListItem( $row ) {
-		global $wgUser;
 		$title = Title::makeTitleSafe( $row->page_namespace, $row->page_title );
 		if( !is_null( $title ) ) {
-			$skin = $wgUser->getSkin();
 			$link = $row->page_is_redirect
-					? '<span class="allpagesredirect">' . $skin->makeKnownLinkObj( $title ) . '</span>'
-					: $skin->makeKnownLinkObj( $title );
-			return( "<li>{$link}</li>\n" );
+					? '<span class="allpagesredirect">' . Linker::linkKnown( $title ) . '</span>'
+					: Linker::linkKnown( $title );
+			return "<li>{$link}</li>\n";
 		} else {
-			return( "<!-- Invalid title " . htmlspecialchars( $row->page_title ) . " in namespace " . htmlspecialchars( $row->page_namespace ) . " -->\n" );
+			return "<!-- Invalid title " . htmlspecialchars( $row->page_title ) .
+				" in namespace " . htmlspecialchars( $row->page_namespace ) . " -->\n";
 		}
 	}
 
@@ -142,6 +145,7 @@ class NewestPages extends IncludableSpecialPage {
 		global $wgLang;
 
 		$limits = array( 10, 20, 30, 50, 100, 150 );
+		$links = array();
 		foreach( $limits as $limit ) {
 			if( $limit != $this->limit ) {
 				$links[] = $this->makeSelfLink( $wgLang->formatNum($limit), 'limit', $limit );
@@ -149,37 +153,54 @@ class NewestPages extends IncludableSpecialPage {
 				$links[] = (string)$limit;
 			}
 		}
-		return( wfMsgHtml( 'newestpages-limitlinks', $wgLang->pipeList( $links ) ) );
+		return $this->msg( 'newestpages-limitlinks' )->rawParams(
+				$wgLang->pipeList( $links ) )->escaped();
 	}
 
 	function makeRedirectToggle() {
-		$label = wfMsgHtml( $this->redirects ? 'newestpages-hideredir' : 'newestpages-showredir' );
+		$label = $this->msg(
+				$this->redirects ? 'newestpages-hideredir' : 'newestpages-showredir'  )->escaped();
 		return $this->makeSelfLink( $label, 'redirects', (int)!$this->redirects );
 	}
 
 	function makeSelfLink( $label, $oname = false, $oval = false ) {
-		global $wgUser;
-		$skin = $wgUser->getSkin();
-		$self = $this->getTitle();
+		$self = $this->getPageTitle();
+		$attr = array();
 		$attr['limit'] = $this->limit;
 		$attr['namespace'] = $this->namespace;
-		if( !$this->redirects )
+
+		if( !$this->redirects ) {
 			$attr['redirects'] = 0;
-		if( $oname )
+		}
+
+		if( $oname ) {
 			$attr[$oname] = $oval;
-		foreach( $attr as $aname => $aval )
-			$attribs[] = "{$aname}={$aval}";
-		return $skin->makeKnownLinkObj( $self, $label, implode( '&', $attribs ) );
+		}
+
+		return Linker::linkKnown( $self, $label, array(), $attr );
 	}
 
 	function makeNamespaceForm() {
-		$self = $this->getTitle();
-		$form  = Xml::openElement( 'form', array( 'method' => 'post', 'action' => $self->getLocalUrl() ) );
-		$form .= Xml::label( wfMsg( 'newestpages-namespace' ), 'namespace' ) . '&#160;';
-		$form .= Xml::namespaceSelector( $this->namespace, 'all' );
+		$self = $this->getPageTitle();
+		$form = Xml::openElement(
+				'form', array( 'method' => 'post', 'action' => $self->getLocalUrl() ) );
+		$form .= Xml::label( $this->msg( 'newestpages-namespace' )->text(), 'namespace' ) . '&#160;';
+		$form .= Html::namespaceSelector( array(
+			'selected' => $this->namespace,
+			'all' => 'all',
+			'label' => null,
+		), array(
+			'name' => 'namespace',
+			'id' => 'namespace',
+			'class' => 'namespaceselector',
+		) );
 		$form .= Html::Hidden( 'limit', $this->limit );
 		$form .= Html::Hidden( 'redirects', $this->redirects );
-		$form .= Xml::submitButton( wfMsg( 'newestpages-submit' ) ) . '</form>';
+		$form .= Xml::submitButton( $this->msg( 'newestpages-submit' )->text() ) . '</form>';
 		return $form;
+	}
+
+	protected function getGroupName() {
+		return 'changes';
 	}
 }

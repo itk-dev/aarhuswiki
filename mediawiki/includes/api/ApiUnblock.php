@@ -4,7 +4,7 @@
  *
  * Created on Sep 7, 2007
  *
- * Copyright © 2007 Roan Kattouw <Firstname>.<Lastname>@gmail.com
+ * Copyright © 2007 Roan Kattouw "<Firstname>.<Lastname>@gmail.com"
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,22 +32,12 @@
  */
 class ApiUnblock extends ApiBase {
 
-	public function __construct( $main, $action ) {
-		parent::__construct( $main, $action );
-	}
-
 	/**
 	 * Unblocks the specified user or provides the reason the unblock failed.
 	 */
 	public function execute() {
 		$user = $this->getUser();
 		$params = $this->extractRequestParams();
-
-		if ( $params['gettoken'] ) {
-			$res['unblocktoken'] = $user->getEditToken( '', $this->getMain()->getRequest() );
-			$this->getResult()->addValue( null, $this->getModuleName(), $res );
-			return;
-		}
 
 		if ( is_null( $params['id'] ) && is_null( $params['user'] ) ) {
 			$this->dieUsageMsg( 'unblock-notarget' );
@@ -63,13 +53,19 @@ class ApiUnblock extends ApiBase {
 		if ( $user->isBlocked() ) {
 			$status = SpecialBlock::checkUnblockSelf( $params['user'], $user );
 			if ( $status !== true ) {
-				$this->dieUsageMsg( $status );
+				$msg = $this->parseMsg( $status );
+				$this->dieUsage(
+					$msg['info'],
+					$msg['code'],
+					0,
+					array( 'blockinfo' => ApiQueryUserInfo::getBlockInfo( $user->getBlock() ) )
+				);
 			}
 		}
 
 		$data = array(
 			'Target' => is_null( $params['id'] ) ? $params['user'] : "#{$params['id']}",
-			'Reason' => is_null( $params['reason'] ) ? '' : $params['reason']
+			'Reason' => $params['reason']
 		);
 		$block = Block::newFromTarget( $data['Target'] );
 		$retval = SpecialUnblock::processUnblock( $data, $this->getContext() );
@@ -78,7 +74,9 @@ class ApiUnblock extends ApiBase {
 		}
 
 		$res['id'] = $block->getId();
-		$res['user'] = $block->getType() == Block::TYPE_AUTO ? '' : $block->getTarget();
+		$target = $block->getType() == Block::TYPE_AUTO ? '' : $block->getTarget();
+		$res['user'] = $target instanceof User ? $target->getName() : $target;
+		$res['userid'] = $target instanceof User ? $target->getId() : 0;
 		$res['reason'] = $params['reason'];
 		$this->getResult()->addValue( null, $this->getModuleName(), $res );
 	}
@@ -97,57 +95,24 @@ class ApiUnblock extends ApiBase {
 				ApiBase::PARAM_TYPE => 'integer',
 			),
 			'user' => null,
-			'token' => null,
-			'gettoken' => false,
-			'reason' => null,
+			'reason' => '',
 		);
-	}
-
-	public function getParamDescription() {
-		$p = $this->getModulePrefix();
-		return array(
-			'id' => "ID of the block you want to unblock (obtained through list=blocks). Cannot be used together with {$p}user",
-			'user' => "Username, IP address or IP range you want to unblock. Cannot be used together with {$p}id",
-			'token' => "An unblock token previously obtained through the gettoken parameter or {$p}prop=info",
-			'gettoken' => 'If set, an unblock token will be returned, and no other action will be taken',
-			'reason' => 'Reason for unblock (optional)',
-		);
-	}
-
-	public function getDescription() {
-		return 'Unblock a user';
-	}
-
-	public function getPossibleErrors() {
-		return array_merge( parent::getPossibleErrors(), array(
-			array( 'unblock-notarget' ),
-			array( 'unblock-idanduser' ),
-			array( 'cantunblock' ),
-			array( 'ipbblocked' ),
-			array( 'ipbnounblockself' ),
-		) );
 	}
 
 	public function needsToken() {
-		return true;
+		return 'csrf';
 	}
 
-	public function getTokenSalt() {
-		return '';
-	}
-
-	public function getExamples() {
+	protected function getExamplesMessages() {
 		return array(
-			'api.php?action=unblock&id=105',
-			'api.php?action=unblock&user=Bob&reason=Sorry%20Bob'
+			'action=unblock&id=105'
+				=> 'apihelp-unblock-example-id',
+			'action=unblock&user=Bob&reason=Sorry%20Bob'
+				=> 'apihelp-unblock-example-user',
 		);
 	}
 
 	public function getHelpUrls() {
 		return 'https://www.mediawiki.org/wiki/API:Block';
-	}
-
-	public function getVersion() {
-		return __CLASS__ . ': $Id$';
 	}
 }

@@ -1,4 +1,25 @@
 <?php
+/**
+ * Holder for stripped items when parsing wiki markup.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
+ * @file
+ * @ingroup Parser
+ */
 
 /**
  * @todo document, briefly.
@@ -10,41 +31,51 @@ class StripState {
 	protected $regex;
 
 	protected $tempType, $tempMergePrefix;
+	protected $circularRefGuard;
+	protected $recursionLevel = 0;
+
+	const UNSTRIP_RECURSION_LIMIT = 20;
 
 	/**
-	 * @param $prefix string
+	 * @param string|null $prefix
+	 * @since 1.26 The prefix argument should be omitted, as the strip marker
+	 *  prefix string is now a constant.
 	 */
-	function __construct( $prefix ) {
-		$this->prefix = $prefix;
+	public function __construct( $prefix = null ) {
+		if ( $prefix !== null ) {
+			wfDeprecated( __METHOD__ . ' with called with $prefix argument' .
+				' (call with no arguments instead)', '1.26' );
+		}
 		$this->data = array(
 			'nowiki' => array(),
 			'general' => array()
 		);
-		$this->regex = "/{$this->prefix}([^\x7f]+)" . Parser::MARKER_SUFFIX . '/';
+		$this->regex = '/' . Parser::MARKER_PREFIX . "([^\x7f]+)" . Parser::MARKER_SUFFIX . '/';
+		$this->circularRefGuard = array();
 	}
 
 	/**
 	 * Add a nowiki strip item
-	 * @param $marker
-	 * @param $value
+	 * @param string $marker
+	 * @param string $value
 	 */
-	function addNoWiki( $marker, $value ) {
+	public function addNoWiki( $marker, $value ) {
 		$this->addItem( 'nowiki', $marker, $value );
 	}
 
 	/**
-	 * @param $marker
-	 * @param $value
+	 * @param string $marker
+	 * @param string $value
 	 */
-	function addGeneral( $marker, $value ) {
+	public function addGeneral( $marker, $value ) {
 		$this->addItem( 'general', $marker, $value );
 	}
 
 	/**
 	 * @throws MWException
-	 * @param $type
-	 * @param $marker
-	 * @param $value
+	 * @param string $type
+	 * @param string $marker
+	 * @param string $value
 	 */
 	protected function addItem( $type, $marker, $value ) {
 		if ( !preg_match( $this->regex, $marker, $m ) ) {
@@ -55,78 +86,95 @@ class StripState {
 	}
 
 	/**
-	 * @param $text
+	 * @param string $text
 	 * @return mixed
 	 */
-	function unstripGeneral( $text ) {
+	public function unstripGeneral( $text ) {
 		return $this->unstripType( 'general', $text );
 	}
 
 	/**
-	 * @param $text
+	 * @param string $text
 	 * @return mixed
 	 */
-	function unstripNoWiki( $text ) {
+	public function unstripNoWiki( $text ) {
 		return $this->unstripType( 'nowiki', $text );
 	}
 
 	/**
-	 * @param  $text
+	 * @param string $text
 	 * @return mixed
 	 */
-	function unstripBoth( $text ) {
+	public function unstripBoth( $text ) {
 		$text = $this->unstripType( 'general', $text );
 		$text = $this->unstripType( 'nowiki', $text );
 		return $text;
 	}
 
 	/**
-	 * @param $type
-	 * @param $text
+	 * @param string $type
+	 * @param string $text
 	 * @return mixed
 	 */
 	protected function unstripType( $type, $text ) {
-		// Shortcut 
+		// Shortcut
 		if ( !count( $this->data[$type] ) ) {
 			return $text;
 		}
 
-		wfProfileIn( __METHOD__ );
+		$oldType = $this->tempType;
 		$this->tempType = $type;
-		do {
-			$oldText = $text;
-			$text = preg_replace_callback( $this->regex, array( $this, 'unstripCallback' ), $text );
-		} while ( $text !== $oldText );
-		$this->tempType = null;
-		wfProfileOut( __METHOD__ );
+		$text = preg_replace_callback( $this->regex, array( $this, 'unstripCallback' ), $text );
+		$this->tempType = $oldType;
 		return $text;
 	}
 
 	/**
-	 * @param $m array
+	 * @param array $m
 	 * @return array
 	 */
 	protected function unstripCallback( $m ) {
-		if ( isset( $this->data[$this->tempType][$m[1]] ) ) {
-			return $this->data[$this->tempType][$m[1]];
+		$marker = $m[1];
+		if ( isset( $this->data[$this->tempType][$marker] ) ) {
+			if ( isset( $this->circularRefGuard[$marker] ) ) {
+				return '<span class="error">'
+					. wfMessage( 'parser-unstrip-loop-warning' )->inContentLanguage()->text()
+					. '</span>';
+			}
+			if ( $this->recursionLevel >= self::UNSTRIP_RECURSION_LIMIT ) {
+				return '<span class="error">' .
+					wfMessage( 'parser-unstrip-recursion-limit' )
+						->numParams( self::UNSTRIP_RECURSION_LIMIT )->inContentLanguage()->text() .
+					'</span>';
+			}
+			$this->circularRefGuard[$marker] = true;
+			$this->recursionLevel++;
+			$value = $this->data[$this->tempType][$marker];
+			if ( $value instanceof Closure ) {
+				$value = $value();
+			}
+			$ret = $this->unstripType( $this->tempType, $value );
+			$this->recursionLevel--;
+			unset( $this->circularRefGuard[$marker] );
+			return $ret;
 		} else {
 			return $m[0];
 		}
 	}
 
 	/**
-	 * Get a StripState object which is sufficient to unstrip the given text. 
+	 * Get a StripState object which is sufficient to unstrip the given text.
 	 * It will contain the minimum subset of strip items necessary.
 	 *
-	 * @param $text string
+	 * @param string $text
 	 *
 	 * @return StripState
 	 */
-	function getSubState( $text ) {
-		$subState = new StripState( $this->prefix );
+	public function getSubState( $text ) {
+		$subState = new StripState();
 		$pos = 0;
 		while ( true ) {
-			$startPos = strpos( $text, $this->prefix, $pos );
+			$startPos = strpos( $text, Parser::MARKER_PREFIX, $pos );
 			$endPos = strpos( $text, Parser::MARKER_SUFFIX, $pos );
 			if ( $startPos === false || $endPos === false ) {
 				break;
@@ -154,12 +202,12 @@ class StripState {
 	 * will not be preserved. The strings in the $texts array will have their
 	 * strip markers rewritten, the resulting array of strings will be returned.
 	 *
-	 * @param $otherState StripState
-	 * @param $texts Array
-	 * @return Array
+	 * @param StripState $otherState
+	 * @param array $texts
+	 * @return array
 	 */
-	function merge( $otherState, $texts ) {
-		$mergePrefix = Parser::getRandomString();
+	public function merge( $otherState, $texts ) {
+		$mergePrefix = wfRandomString( 16 );
 
 		foreach ( $otherState->data as $type => $items ) {
 			foreach ( $items as $key => $value ) {
@@ -174,22 +222,21 @@ class StripState {
 	}
 
 	/**
-	 * @param $m
+	 * @param array $m
 	 * @return string
 	 */
 	protected function mergeCallback( $m ) {
 		$key = $m[1];
-		return "{$this->prefix}{$this->tempMergePrefix}-$key" . Parser::MARKER_SUFFIX;
+		return Parser::MARKER_PREFIX . $this->tempMergePrefix . '-' . $key . Parser::MARKER_SUFFIX;
 	}
 
 	/**
 	 * Remove any strip markers found in the given text.
 	 *
-	 * @param $text Input string
+	 * @param string $text Input string
 	 * @return string
 	 */
-	function killMarkers( $text ) {
+	public function killMarkers( $text ) {
 		return preg_replace( $this->regex, '', $text );
 	}
 }
-

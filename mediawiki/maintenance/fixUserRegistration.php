@@ -18,38 +18,74 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup Maintenance
  */
 
-require_once( dirname( __FILE__ ) . '/Maintenance.php' );
+require_once __DIR__ . '/Maintenance.php';
 
+/**
+ * Maintenance script that fixes the user_registration field.
+ *
+ * @ingroup Maintenance
+ */
 class FixUserRegistration extends Maintenance {
 	public function __construct() {
 		parent::__construct();
 		$this->mDescription = "Fix the user_registration field";
+		$this->setBatchSize( 1000 );
 	}
 
 	public function execute() {
-		$dbr = wfGetDB( DB_SLAVE );
 		$dbw = wfGetDB( DB_MASTER );
 
-		// Get user IDs which need fixing
-		$res = $dbr->select( 'user', 'user_id', 'user_registration IS NULL', __METHOD__ );
-		foreach ( $res as $row ) {
-			$id = $row->user_id;
-			// Get first edit time
-			$timestamp = $dbr->selectField( 'revision', 'MIN(rev_timestamp)', array( 'rev_user' => $id ), __METHOD__ );
-			// Update
-			if ( !empty( $timestamp ) ) {
-				$dbw->update( 'user', array( 'user_registration' => $timestamp ), array( 'user_id' => $id ), __METHOD__ );
-				$this->output( "$id $timestamp\n" );
-			} else {
-				$this->output( "$id NULL\n" );
+		$lastId = 0;
+		do {
+			// Get user IDs which need fixing
+			$res = $dbw->select(
+				'user',
+				'user_id',
+				array(
+					'user_id > ' . $dbw->addQuotes( $lastId ),
+					'user_registration IS NULL'
+				),
+				__METHOD__,
+				array(
+					'LIMIT' => $this->mBatchSize,
+					'ORDER BY' => 'user_id',
+				)
+			);
+			foreach ( $res as $row ) {
+				$id = $row->user_id;
+				$lastId = $id;
+				// Get first edit time
+				$timestamp = $dbw->selectField(
+					'revision',
+					'MIN(rev_timestamp)',
+					array( 'rev_user' => $id ),
+					__METHOD__
+				);
+				// Update
+				if ( $timestamp !== null ) {
+					$dbw->update(
+						'user',
+						array( 'user_registration' => $timestamp ),
+						array( 'user_id' => $id ),
+						__METHOD__
+					);
+					$user = User::newFromId( $id );
+					$user->invalidateCache();
+					$this->output( "Set registration for #$id to $timestamp\n" );
+				} else {
+					$this->output( "Could not find registration for #$id NULL\n" );
+				}
 			}
-		}
-		$this->output( "\n" );
+			$this->output( "Waiting for slaves..." );
+			wfWaitForSlaves();
+			$this->output( " done.\n" );
+		} while ( $res->numRows() >= $this->mBatchSize );
 	}
 }
 
 $maintClass = "FixUserRegistration";
-require_once( RUN_MAINTENANCE_IF_MAIN );
+require_once RUN_MAINTENANCE_IF_MAIN;

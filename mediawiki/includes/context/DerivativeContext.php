@@ -1,7 +1,5 @@
 <?php
 /**
- * Request-dependant objects containers.
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -17,8 +15,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
- * @since 1.19
- *
  * @author Daniel Friesen
  * @file
  */
@@ -28,9 +24,9 @@
  * but allow individual pieces of context to be changed locally
  * eg: A ContextSource that can inherit from the main RequestContext but have
  *     a different Title instance set on it.
+ * @since 1.19
  */
-class DerivativeContext extends ContextSource {
-
+class DerivativeContext extends ContextSource implements MutableContext {
 	/**
 	 * @var WebRequest
 	 */
@@ -67,17 +63,62 @@ class DerivativeContext extends ContextSource {
 	private $skin;
 
 	/**
+	 * @var Config
+	 */
+	private $config;
+
+	/**
+	 * @var Stats
+	 */
+	private $stats;
+
+	/**
 	 * Constructor
-	 * @param $context IContextSource Context to inherit from
+	 * @param IContextSource $context Context to inherit from
 	 */
 	public function __construct( IContextSource $context ) {
 		$this->setContext( $context );
 	}
 
 	/**
+	 * Set the SiteConfiguration object
+	 *
+	 * @param Config $s
+	 */
+	public function setConfig( Config $s ) {
+		$this->config = $s;
+	}
+
+	/**
+	 * Get the Config object
+	 *
+	 * @return Config
+	 */
+	public function getConfig() {
+		if ( !is_null( $this->config ) ) {
+			return $this->config;
+		} else {
+			return $this->getContext()->getConfig();
+		}
+	}
+
+	/**
+	 * Get the stats object
+	 *
+	 * @return BufferingStatsdDataFactory
+	 */
+	public function getStats() {
+		if ( !is_null( $this->stats ) ) {
+			return $this->stats;
+		} else {
+			return $this->getContext()->getStats();
+		}
+	}
+
+	/**
 	 * Set the WebRequest object
 	 *
-	 * @param $r WebRequest object
+	 * @param WebRequest $r
 	 */
 	public function setRequest( WebRequest $r ) {
 		$this->request = $r;
@@ -99,7 +140,7 @@ class DerivativeContext extends ContextSource {
 	/**
 	 * Set the Title object
 	 *
-	 * @param $t Title object
+	 * @param Title $t
 	 */
 	public function setTitle( Title $t ) {
 		$this->title = $t;
@@ -108,7 +149,7 @@ class DerivativeContext extends ContextSource {
 	/**
 	 * Get the Title object
 	 *
-	 * @return Title
+	 * @return Title|null
 	 */
 	public function getTitle() {
 		if ( !is_null( $this->title ) ) {
@@ -140,7 +181,7 @@ class DerivativeContext extends ContextSource {
 	 * Set the WikiPage object
 	 *
 	 * @since 1.19
-	 * @param $p WikiPage object
+	 * @param WikiPage $p
 	 */
 	public function setWikiPage( WikiPage $p ) {
 		$this->wikipage = $p;
@@ -166,7 +207,7 @@ class DerivativeContext extends ContextSource {
 	/**
 	 * Set the OutputPage object
 	 *
-	 * @param $o OutputPage
+	 * @param OutputPage $o
 	 */
 	public function setOutput( OutputPage $o ) {
 		$this->output = $o;
@@ -175,7 +216,7 @@ class DerivativeContext extends ContextSource {
 	/**
 	 * Get the OutputPage object
 	 *
-	 * @return OutputPage object
+	 * @return OutputPage
 	 */
 	public function getOutput() {
 		if ( !is_null( $this->output ) ) {
@@ -188,7 +229,7 @@ class DerivativeContext extends ContextSource {
 	/**
 	 * Set the User object
 	 *
-	 * @param $u User
+	 * @param User $u
 	 */
 	public function setUser( User $u ) {
 		$this->user = $u;
@@ -210,18 +251,8 @@ class DerivativeContext extends ContextSource {
 	/**
 	 * Set the Language object
 	 *
-	 * @deprecated 1.19 Use setLanguage instead
-	 * @param $l Mixed Language instance or language code
-	 */
-	public function setLang( $l ) {
-		wfDeprecated( __METHOD__, '1.19' );
-		$this->setLanguage( $l );
-	}
-
-	/**
-	 * Set the Language object
-	 *
-	 * @param $l Mixed Language instance or language code
+	 * @param Language|string $l Language instance or language code
+	 * @throws MWException
 	 * @since 1.19
 	 */
 	public function setLanguage( $l ) {
@@ -234,15 +265,6 @@ class DerivativeContext extends ContextSource {
 		} else {
 			throw new MWException( __METHOD__ . " was passed an invalid type of data." );
 		}
-	}
-
-	/**
-	 * @deprecated 1.19 Use getLanguage instead
-	 * @return Language
-	 */
-	public function getLang() {
-		wfDeprecated( __METHOD__, '1.19' );
-		$this->getLanguage();
 	}
 
 	/**
@@ -262,7 +284,7 @@ class DerivativeContext extends ContextSource {
 	/**
 	 * Set the Skin object
 	 *
-	 * @param $s Skin
+	 * @param Skin $s
 	 */
 	public function setSkin( Skin $s ) {
 		$this->skin = clone $s;
@@ -282,5 +304,19 @@ class DerivativeContext extends ContextSource {
 		}
 	}
 
-}
+	/**
+	 * Get a message using the current context.
+	 *
+	 * This can't just inherit from ContextSource, since then
+	 * it would set only the original context, and not take
+	 * into account any changes.
+	 *
+	 * @param mixed $args,... Arguments to wfMessage
+	 * @return Message
+	 */
+	public function msg() {
+		$args = func_get_args();
 
+		return call_user_func_array( 'wfMessage', $args )->setContext( $this );
+	}
+}

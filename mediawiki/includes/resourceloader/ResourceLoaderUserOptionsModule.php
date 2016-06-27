@@ -1,5 +1,7 @@
 <?php
 /**
+ * Resource loader module for user preference customizations.
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -25,36 +27,41 @@
  */
 class ResourceLoaderUserOptionsModule extends ResourceLoaderModule {
 
-	/* Protected Members */
-
-	protected $modifiedTime = array();
-
 	protected $origin = self::ORIGIN_CORE_INDIVIDUAL;
 
-	/* Methods */
+	protected $targets = array( 'desktop', 'mobile' );
 
 	/**
-	 * @param $context ResourceLoaderContext
-	 * @return array|int|Mixed
+	 * @param ResourceLoaderContext $context
+	 * @return array List of module names as strings
 	 */
-	public function getModifiedTime( ResourceLoaderContext $context ) {
-		$hash = $context->getHash();
-		if ( isset( $this->modifiedTime[$hash] ) ) {
-			return $this->modifiedTime[$hash];
-		}
-		
-		global $wgUser;
-		return $this->modifiedTime[$hash] = wfTimestamp( TS_UNIX, $wgUser->getTouched() );
+	public function getDependencies( ResourceLoaderContext $context = null ) {
+		return array( 'user.defaults' );
 	}
 
 	/**
-	 * @param $context ResourceLoaderContext
+	 * @return bool
+	 */
+	public function enableModuleContentVersion() {
+		return true;
+	}
+
+	/**
+	 * @param ResourceLoaderContext $context
 	 * @return string
 	 */
 	public function getScript( ResourceLoaderContext $context ) {
-		global $wgUser;
 		return Xml::encodeJsCall( 'mw.user.options.set',
-			array( $wgUser->getOptions() ) );
+			array( $context->getUserObj()->getOptions( User::GETOPTIONS_EXCLUDE_DEFAULTS ) ),
+			ResourceLoader::inDebugMode()
+		);
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function supportsURLLoading() {
+		return false;
 	}
 
 	/**

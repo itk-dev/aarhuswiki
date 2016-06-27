@@ -1,7 +1,6 @@
 <?php
 /**
- * Maintenance script to remove cache entries for removed ResourceLoader modules
- * from the database
+ * Remove cache entries for removed ResourceLoader modules from the database.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,24 +22,28 @@
  * @author Roan Kattouw
  */
 
-require_once( dirname( __FILE__ ) . '/Maintenance.php' );
+require_once __DIR__ . '/Maintenance.php';
 
+/**
+ * Maintenance script to remove cache entries for removed ResourceLoader modules
+ * from the database.
+ *
+ * @ingroup Maintenance
+ */
 class CleanupRemovedModules extends Maintenance {
 
 	public function __construct() {
 		parent::__construct();
 		$this->mDescription = 'Remove cache entries for removed ResourceLoader modules from the database';
 		$this->addOption( 'batchsize', 'Delete rows in batches of this size. Default: 500', false, true );
-		$this->addOption( 'max-slave-lag', 'If the slave lag exceeds this many seconds, wait until it drops below this value. Default: 5', false, true );
 	}
 
 	public function execute() {
 		$dbw = wfGetDB( DB_MASTER );
-		$rl = new ResourceLoader();
+		$rl = new ResourceLoader( ConfigFactory::getDefaultInstance()->makeConfig( 'main' ) );
 		$moduleNames = $rl->getModuleNames();
 		$moduleList = implode( ', ', array_map( array( $dbw, 'addQuotes' ), $moduleNames ) );
 		$limit = max( 1, intval( $this->getOption( 'batchsize', 500 ) ) );
-		$maxlag = intval( $this->getOption( 'max-slave-lag', 5 ) );
 
 		$this->output( "Cleaning up module_deps table...\n" );
 		$i = 1;
@@ -52,8 +55,8 @@ class CleanupRemovedModules extends Maintenance {
 			$numRows = $dbw->affectedRows();
 			$this->output( "Batch $i: $numRows rows\n" );
 			$i++;
-			wfWaitForSlaves( $maxlag );
-		} while( $numRows > 0 );
+			wfWaitForSlaves();
+		} while ( $numRows > 0 );
 		$this->output( "done\n" );
 
 		$this->output( "Cleaning up msg_resource table...\n" );
@@ -66,8 +69,8 @@ class CleanupRemovedModules extends Maintenance {
 			$numRows = $dbw->affectedRows();
 			$this->output( "Batch $i: $numRows rows\n" );
 			$i++;
-			wfWaitForSlaves( $maxlag );
-		} while( $numRows > 0 );
+			wfWaitForSlaves();
+		} while ( $numRows > 0 );
 		$this->output( "done\n" );
 
 		$this->output( "Cleaning up msg_resource_links table...\n" );
@@ -79,11 +82,11 @@ class CleanupRemovedModules extends Maintenance {
 			$numRows = $dbw->affectedRows();
 			$this->output( "Batch $i: $numRows rows\n" );
 			$i++;
-			wfWaitForSlaves( $maxlag );
-		} while( $numRows > 0 );
+			wfWaitForSlaves();
+		} while ( $numRows > 0 );
 		$this->output( "done\n" );
 	}
 }
 
 $maintClass = "CleanupRemovedModules";
-require_once( RUN_MAINTENANCE_IF_MAIN );
+require_once RUN_MAINTENANCE_IF_MAIN;

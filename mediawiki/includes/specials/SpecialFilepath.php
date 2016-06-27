@@ -26,64 +26,30 @@
  *
  * @ingroup SpecialPage
  */
-class SpecialFilepath extends SpecialPage {
-
-	function __construct() {
+class SpecialFilepath extends RedirectSpecialPage {
+	public function __construct() {
 		parent::__construct( 'Filepath' );
-	}
-
-	function execute( $par ) {
-		$this->setHeaders();
-		$this->outputHeader();
-
-		$request = $this->getRequest();
-		$file = !is_null( $par ) ? $par : $request->getText( 'file' );
-
-		$title = Title::newFromText( $file, NS_FILE );
-
-		if ( ! $title instanceof Title || $title->getNamespace() != NS_FILE ) {
-			$this->showForm( $title );
-		} else {
-			$file = wfFindFile( $title );
-
-			if ( $file && $file->exists() ) {
-				// Default behaviour: Use the direct link to the file.
-				$url = $file->getURL();
-				$width = $request->getInt( 'width', -1 );
-				$height = $request->getInt( 'height', -1 );
-
-				// If a width is requested...
-				if ( $width != -1 ) {
-					$mto = $file->transform( array( 'width' => $width, 'height' => $height ) );
-					// ... and we can
-					if ( $mto && !$mto->isError() ) {
-						// ... change the URL to point to a thumbnail.
-						$url = $mto->getURL();
-					}
-				}
-				$this->getOutput()->redirect( $url );
-			} else {
-				$this->getOutput()->setStatusCode( 404 );
-				$this->showForm( $title );
-			}
-		}
+		$this->mAllowedRedirectParams = array( 'width', 'height' );
 	}
 
 	/**
-	 * @param $title Title
+	 * Implement by redirecting through Special:Redirect/file.
+	 *
+	 * @param string|null $subpage
+	 * @return Title
 	 */
-	function showForm( $title ) {
-		global $wgScript;
+	public function getRedirect( $par ) {
+		$file = $par ?: $this->getRequest()->getText( 'file' );
 
-		$this->getOutput()->addHTML(
-			Html::openElement( 'form', array( 'method' => 'get', 'action' => $wgScript, 'id' => 'specialfilepath' ) ) .
-			Html::openElement( 'fieldset' ) .
-			Html::element( 'legend', null, wfMsg( 'filepath' ) ) .
-			Html::hidden( 'title', $this->getTitle()->getPrefixedText() ) .
-			Xml::inputLabel( wfMsg( 'filepath-page' ), 'file', 'file', 25, is_object( $title ) ? $title->getText() : '' ) . ' ' .
-			Xml::submitButton( wfMsg( 'filepath-submit' ) ) . "\n" .
-			Html::closeElement( 'fieldset' ) .
-			Html::closeElement( 'form' )
-		);
+		if ( $file ) {
+			$argument = "file/$file";
+		} else {
+			$argument = 'file';
+		}
+		return SpecialPage::getSafeTitleFor( 'Redirect', $argument );
+	}
+
+	protected function getGroupName() {
+		return 'media';
 	}
 }

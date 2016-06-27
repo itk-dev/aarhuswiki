@@ -6,6 +6,8 @@
  *
  * @author Antoine Musso
  * @group Database
+ *
+ * @covers SpecialRecentChanges
  */
 class SpecialRecentchangesTest extends MediaWikiTestCase {
 
@@ -13,9 +15,6 @@ class SpecialRecentchangesTest extends MediaWikiTestCase {
 	 * @var SpecialRecentChanges
 	 */
 	protected $rc;
-
-	function setUp() {
-	}
 
 	/** helper to test SpecialRecentchanges::buildMainQueryConds() */
 	private function assertConditions( $expected, $requestOptions = null, $message = '' ) {
@@ -44,16 +43,14 @@ class SpecialRecentchangesTest extends MediaWikiTestCase {
 
 	/** return false if condition begin with 'rc_timestamp ' */
 	private static function filterOutRcTimestampCondition( $var ) {
-		return (false === strpos( $var, 'rc_timestamp ' ));
-
+		return ( false === strpos( $var, 'rc_timestamp ' ) );
 	}
 
 	public function testRcNsFilter() {
 		$this->assertConditions(
 			array( # expected
 				'rc_bot' => 0,
-				#0 => "rc_timestamp >= '20110223000000'",
-				1 => "rc_namespace = '0'",
+				0 => "rc_namespace = '0'",
 			),
 			array(
 				'namespace' => NS_MAIN,
@@ -65,15 +62,14 @@ class SpecialRecentchangesTest extends MediaWikiTestCase {
 	public function testRcNsFilterInversion() {
 		$this->assertConditions(
 			array( # expected
-				#0 => "rc_timestamp >= '20110223000000'",
 				'rc_bot' => 0,
-				1 => sprintf( "rc_namespace != '%s'", NS_MAIN ),
+				0 => sprintf( "rc_namespace != '%s'", NS_MAIN ),
 			),
 			array(
 				'namespace' => NS_MAIN,
 				'invert' => 1,
 			),
-		  "rc conditions with namespace inverted"
+			"rc conditions with namespace inverted"
 		);
 	}
 
@@ -84,15 +80,14 @@ class SpecialRecentchangesTest extends MediaWikiTestCase {
 	public function testRcNsFilterAssociation( $ns1, $ns2 ) {
 		$this->assertConditions(
 			array( # expected
-				#0 => "rc_timestamp >= '20110223000000'",
 				'rc_bot' => 0,
-				1 => sprintf( "(rc_namespace = '%s' OR rc_namespace = '%s')", $ns1, $ns2 ),
+				0 => sprintf( "(rc_namespace = '%s' OR rc_namespace = '%s')", $ns1, $ns2 ),
 			),
 			array(
 				'namespace' => $ns1,
 				'associated' => 1,
 			),
-		  "rc conditions with namespace inverted"
+			"rc conditions with namespace inverted"
 		);
 	}
 
@@ -103,16 +98,15 @@ class SpecialRecentchangesTest extends MediaWikiTestCase {
 	public function testRcNsFilterAssociationWithInversion( $ns1, $ns2 ) {
 		$this->assertConditions(
 			array( # expected
-				#0 => "rc_timestamp >= '20110223000000'",
 				'rc_bot' => 0,
-				1 => sprintf( "(rc_namespace != '%s' AND rc_namespace != '%s')", $ns1, $ns2 ),
+				0 => sprintf( "(rc_namespace != '%s' AND rc_namespace != '%s')", $ns1, $ns2 ),
 			),
 			array(
-				'namespace'  => $ns1,
+				'namespace' => $ns1,
 				'associated' => 1,
-				'invert'     => 1,
+				'invert' => 1,
 			),
-		  "rc conditions with namespace inverted"
+			"rc conditions with namespace inverted"
 		);
 	}
 
@@ -120,13 +114,10 @@ class SpecialRecentchangesTest extends MediaWikiTestCase {
 	 * Provides associated namespaces to test recent changes
 	 * namespaces association filtering.
 	 */
-	public function provideNamespacesAssociations() {
+	public static function provideNamespacesAssociations() {
 		return array( # (NS => Associated_NS)
-			array( NS_MAIN, NS_TALK),
-			array( NS_TALK, NS_MAIN),
+			array( NS_MAIN, NS_TALK ),
+			array( NS_TALK, NS_MAIN ),
 		);
 	}
-
 }
-
-

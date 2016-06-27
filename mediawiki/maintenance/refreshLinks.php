@@ -17,11 +17,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup Maintenance
  */
 
-require_once( dirname( __FILE__ ) . '/Maintenance.php' );
+require_once __DIR__ . '/Maintenance.php';
 
+/**
+ * Maintenance script to refresh link tables.
+ *
+ * @ingroup Maintenance
+ */
 class RefreshLinks extends Maintenance {
 	public function __construct() {
 		parent::__construct();
@@ -30,50 +36,57 @@ class RefreshLinks extends Maintenance {
 		$this->addOption( 'new-only', 'Only affect articles with just a single edit' );
 		$this->addOption( 'redirects-only', 'Only fix redirects, not all links' );
 		$this->addOption( 'old-redirects-only', 'Only fix redirects with no redirect table entry' );
-		$this->addOption( 'm', 'Maximum replication lag', false, true );
 		$this->addOption( 'e', 'Last page id to refresh', false, true );
+		$this->addOption( 'dfn-chunk-size', 'Maximum number of existent IDs to check per ' .
+			'query, default 100000', false, true );
 		$this->addArg( 'start', 'Page_id to start from, default 1', false );
 		$this->setBatchSize( 100 );
 	}
 
 	public function execute() {
-		$max = $this->getOption( 'm', 0 );
+		// Note that there is a difference between not specifying the start
+		// and end IDs and using the minimum and maximum values from the page
+		// table. In the latter case, deleteLinksFromNonexistent() will not
+		// delete entries for nonexistent IDs that fall outside the range.
+		$start = (int)$this->getArg( 0 ) ?: null;
+		$end = (int)$this->getOption( 'e' ) ?: null;
+		$dfnChunkSize = (int)$this->getOption( 'dfn-chunk-size', 100000 );
 		if ( !$this->hasOption( 'dfn-only' ) ) {
-			$start = $this->getArg( 0, 1 );
 			$new = $this->getOption( 'new-only', false );
-			$end = $this->getOption( 'e', 0 );
 			$redir = $this->getOption( 'redirects-only', false );
 			$oldRedir = $this->getOption( 'old-redirects-only', false );
-			$this->doRefreshLinks( $start, $new, $max, $end, $redir, $oldRedir );
+			$this->doRefreshLinks( $start, $new, $end, $redir, $oldRedir );
+			$this->deleteLinksFromNonexistent( null, null, $this->mBatchSize, $dfnChunkSize );
+		} else {
+			$this->deleteLinksFromNonexistent( $start, $end, $this->mBatchSize, $dfnChunkSize );
 		}
-		$this->deleteLinksFromNonexistent( $max, $this->mBatchSize );
 	}
 
 	/**
 	 * Do the actual link refreshing.
-	 * @param $start int Page_id to start from
-	 * @param $newOnly bool Only do pages with 1 edit
-	 * @param $maxLag int Max DB replication lag
-	 * @param $end int Page_id to stop at
-	 * @param $redirectsOnly bool Only fix redirects
-	 * @param $oldRedirectsOnly bool Only fix redirects without redirect entries
+	 * @param int|null $start Page_id to start from
+	 * @param bool $newOnly Only do pages with 1 edit
+	 * @param int|null $end Page_id to stop at
+	 * @param bool $redirectsOnly Only fix redirects
+	 * @param bool $oldRedirectsOnly Only fix redirects without redirect entries
 	 */
-	private function doRefreshLinks( $start, $newOnly = false, $maxLag = false,
-						$end = 0, $redirectsOnly = false, $oldRedirectsOnly = false ) {
-		global $wgParser, $wgUseTidy;
+	private function doRefreshLinks( $start, $newOnly = false,
+		$end = null, $redirectsOnly = false, $oldRedirectsOnly = false
+	) {
+		global $wgParser;
 
 		$reportingInterval = 100;
 		$dbr = wfGetDB( DB_SLAVE );
-		$start = intval( $start );
+
+		if ( $start === null ) {
+			$start = 1;
+		}
 
 		// Give extensions a chance to optimize settings
-		wfRunHooks( 'MaintenanceRefreshLinksInit', array( $this ) );
+		Hooks::run( 'MaintenanceRefreshLinksInit', array( $this ) );
 
 		# Don't generate extension images (e.g. Timeline)
 		$wgParser->clearTagHooks();
-
-		# Don't use HTML tidy
-		$wgUseTidy = false;
 
 		$what = $redirectsOnly ? "redirects" : "links";
 
@@ -82,14 +95,9 @@ class RefreshLinks extends Maintenance {
 
 			$conds = array(
 				"page_is_redirect=1",
-				"rd_from IS NULL"
+				"rd_from IS NULL",
+				self::intervalCond( $dbr, 'page_id', $start, $end ),
 			);
-
-			if ( $end == 0 ) {
-				$conds[] = "page_id >= $start";
-			} else {
-				$conds[] = "page_id BETWEEN $start AND $end";
-			}
 
 			$res = $dbr->select(
 				array( 'page', 'redirect' ),
@@ -99,7 +107,7 @@ class RefreshLinks extends Maintenance {
 				array(),
 				array( 'redirect' => array( "LEFT JOIN", "page_id=rd_from" ) )
 			);
-			$num = $dbr->numRows( $res );
+			$num = $res->numRows();
 			$this->output( "Refreshing $num old redirects from $start...\n" );
 
 			$i = 0;
@@ -117,10 +125,11 @@ class RefreshLinks extends Maintenance {
 				array( 'page_id' ),
 				array(
 					'page_is_new' => 1,
-					"page_id >= $start" ),
+					self::intervalCond( $dbr, 'page_id', $start, $end ),
+				),
 				__METHOD__
 			);
-			$num = $dbr->numRows( $res );
+			$num = $res->numRows();
 			$this->output( "$num new articles...\n" );
 
 			$i = 0;
@@ -154,7 +163,7 @@ class RefreshLinks extends Maintenance {
 			}
 
 			if ( !$redirectsOnly ) {
-				$this->output( "Refreshing links table.\n" );
+				$this->output( "Refreshing links tables.\n" );
 				$this->output( "Starting from page_id $start of $end.\n" );
 
 				for ( $id = $start; $id <= $end; $id++ ) {
@@ -170,79 +179,136 @@ class RefreshLinks extends Maintenance {
 	}
 
 	/**
-	 * Update the redirect entry for a given page
-	 * @param $id int The page_id of the redirect
+	 * Update the redirect entry for a given page.
+	 *
+	 * This methods bypasses the "redirect" table to get the redirect target,
+	 * and parses the page's content to fetch it. This allows to be sure that
+	 * the redirect target is up to date and valid.
+	 * This is particularly useful when modifying namespaces to be sure the
+	 * entry in the "redirect" table points to the correct page and not to an
+	 * invalid one.
+	 *
+	 * @param int $id The page ID to check
 	 */
 	private function fixRedirect( $id ) {
-		$title = Title::newFromID( $id );
+		$page = WikiPage::newFromID( $id );
 		$dbw = wfGetDB( DB_MASTER );
 
-		if ( is_null( $title ) ) {
+		if ( $page === null ) {
 			// This page doesn't exist (any more)
 			// Delete any redirect table entry for it
 			$dbw->delete( 'redirect', array( 'rd_from' => $id ),
 				__METHOD__ );
+
 			return;
 		}
 
-		$page = WikiPage::factory( $title );
-		$rt = $page->getRedirectTarget();
+		$rt = null;
+		$content = $page->getContent( Revision::RAW );
+		if ( $content !== null ) {
+			$rt = $content->getUltimateRedirectTarget();
+		}
 
 		if ( $rt === null ) {
-			// $title is not a redirect
+			// The page is not a redirect
 			// Delete any redirect table entry for it
-			$dbw->delete( 'redirect', array( 'rd_from' => $id ),
-				__METHOD__ );
+			$dbw->delete( 'redirect', array( 'rd_from' => $id ), __METHOD__ );
+			$fieldValue = 0;
+		} else {
+			$page->insertRedirectEntry( $rt );
+			$fieldValue = 1;
 		}
+
+		// Update the page table to be sure it is an a consistent state
+		$dbw->update( 'page', array( 'page_is_redirect' => $fieldValue ),
+			array( 'page_id' => $id ), __METHOD__ );
 	}
 
 	/**
 	 * Run LinksUpdate for all links on a given page_id
-	 * @param $id int The page_id
+	 * @param int $id The page_id
 	 */
 	public static function fixLinksFromArticle( $id ) {
-		global $wgParser;
-
-		$title = Title::newFromID( $id );
-		$dbw = wfGetDB( DB_MASTER );
+		$page = WikiPage::newFromID( $id );
 
 		LinkCache::singleton()->clear();
 
-		if ( is_null( $title ) ) {
+		if ( $page === null ) {
 			return;
 		}
 
-		$revision = Revision::newFromTitle( $title );
-		if ( !$revision ) {
+		$content = $page->getContent( Revision::RAW );
+		if ( $content === null ) {
 			return;
 		}
 
-		$dbw->begin();
+		$dbw = wfGetDB( DB_MASTER );
+		$dbw->begin( __METHOD__ );
 
-		$options = new ParserOptions;
-		$parserOutput = $wgParser->parse( $revision->getText(), $title, $options, true, true, $revision->getId() );
-		$update = new LinksUpdate( $title, $parserOutput, false );
-		$update->doUpdate();
-		$dbw->commit();
+		$updates = $content->getSecondaryDataUpdates( $page->getTitle() );
+		DataUpdate::runUpdates( $updates );
+
+		$dbw->commit( __METHOD__ );
 	}
 
 	/**
 	 * Removes non-existing links from pages from pagelinks, imagelinks,
 	 * categorylinks, templatelinks, externallinks, interwikilinks, langlinks and redirect tables.
 	 *
-	 * @param $maxLag
-	 * @param $batchSize The size of deletion batches
+	 * @param int|null $start Page_id to start from
+	 * @param int|null $end Page_id to stop at
+	 * @param int $batchSize The size of deletion batches
+	 * @param int $chunkSize Maximum number of existent IDs to check per query
 	 *
 	 * @author Merlijn van Deen <valhallasw@arctus.nl>
 	 */
-	private function deleteLinksFromNonexistent( $maxLag = 0, $batchSize = 100 ) {
+	private function deleteLinksFromNonexistent( $start = null, $end = null, $batchSize = 100,
+		$chunkSize = 100000
+	) {
 		wfWaitForSlaves();
+		$this->output( "Deleting illegal entries from the links tables...\n" );
+		$dbr = wfGetDB( DB_SLAVE );
+		do {
+			// Find the start of the next chunk. This is based only
+			// on existent page_ids.
+			$nextStart = $dbr->selectField(
+				'page',
+				'page_id',
+				self::intervalCond( $dbr, 'page_id', $start, $end ),
+				__METHOD__,
+				array( 'ORDER BY' => 'page_id', 'OFFSET' => $chunkSize )
+			);
 
+			if ( $nextStart !== false ) {
+				// To find the end of the current chunk, subtract one.
+				// This will serve to limit the number of rows scanned in
+				// dfnCheckInterval(), per query, to at most the sum of
+				// the chunk size and deletion batch size.
+				$chunkEnd = $nextStart - 1;
+			} else {
+				// This is the last chunk. Check all page_ids up to $end.
+				$chunkEnd = $end;
+			}
+
+			$fmtStart = $start !== null ? "[$start" : '(-INF';
+			$fmtChunkEnd = $chunkEnd !== null ? "$chunkEnd]" : 'INF)';
+			$this->output( "  Checking interval $fmtStart, $fmtChunkEnd\n" );
+			$this->dfnCheckInterval( $start, $chunkEnd, $batchSize );
+
+			$start = $nextStart;
+
+		} while ( $nextStart !== false );
+	}
+
+	/**
+	 * @see RefreshLinks::deleteLinksFromNonexistent()
+	 * @param int|null $start Page_id to start from
+	 * @param int|null $end Page_id to stop at
+	 * @param int $batchSize The size of deletion batches
+	 */
+	private function dfnCheckInterval( $start = null, $end = null, $batchSize = 100 ) {
 		$dbw = wfGetDB( DB_MASTER );
-
-		$lb = wfGetLBFactory()->newMainLB();
-		$dbr = $lb->getConnection( DB_SLAVE );
-		$dbr->bufferResults( false );
+		$dbr = wfGetDB( DB_SLAVE );
 
 		$linksTables = array( // table name => page_id field
 			'pagelinks' => 'pl_from',
@@ -257,40 +323,59 @@ class RefreshLinks extends Maintenance {
 		);
 
 		foreach ( $linksTables as $table => $field ) {
-			$this->output( "Retrieving illegal entries from $table... " );
-
-			// SELECT DISTINCT( $field ) FROM $table LEFT JOIN page ON $field=page_id WHERE page_id IS NULL;
-			$results = $dbr->select( array( $table, 'page' ),
-						  $field,
-						  array( 'page_id' => null ),
-						  __METHOD__,
-						  'DISTINCT',
-						  array( 'page' => array( 'LEFT JOIN', "$field=page_id" ) )
-			);
-
+			$this->output( "    $table: 0" );
+			$tableStart = $start;
 			$counter = 0;
-			$list = array();
-			$this->output( "0.." );
-			foreach ( $results as $row ) {
-				$counter++;
-				$list[] = $row->$field;
-				if ( ( $counter % $batchSize ) == 0 ) {
-					wfWaitForSlaves();
-					$dbw->delete( $table, array( $field => $list ), __METHOD__ );
+			do {
+				$ids = $dbr->selectFieldValues(
+					$table,
+					$field,
+					array(
+						self::intervalCond( $dbr, $field, $tableStart, $end ),
+						"$field NOT IN ({$dbr->selectSQLText( 'page', 'page_id' )})",
+					),
+					__METHOD__,
+					array( 'DISTINCT', 'ORDER BY' => $field, 'LIMIT' => $batchSize )
+				);
 
-					$this->output( $counter . ".." );
-					$list = array();
+				$numIds = count( $ids );
+				if ( $numIds ) {
+					$counter += $numIds;
+					$dbw->delete( $table, array( $field => $ids ), __METHOD__ );
+					$this->output( ", $counter" );
+					$tableStart = $ids[$numIds - 1] + 1;
+					wfWaitForSlaves();
 				}
-			}
-			$this->output( $counter );
-			if ( count( $list ) > 0 ) {
-				$dbw->delete( $table, array( $field => $list ), __METHOD__ );
-			}
-			$this->output( "\n" );
+
+			} while ( $numIds >= $batchSize && ( $end === null || $tableStart <= $end ) );
+
+			$this->output( " deleted.\n" );
 		}
-		$lb->closeAll();
+	}
+
+	/**
+	 * Build a SQL expression for a closed interval (i.e. BETWEEN).
+	 *
+	 * By specifying a null $start or $end, it is also possible to create
+	 * half-bounded or unbounded intervals using this function.
+	 *
+	 * @param IDatabase $db Database connection
+	 * @param string $var Field name
+	 * @param mixed $start First value to include or null
+	 * @param mixed $end Last value to include or null
+	 */
+	private static function intervalCond( IDatabase $db, $var, $start, $end ) {
+		if ( $start === null && $end === null ) {
+			return "$var IS NOT NULL";
+		} elseif ( $end === null ) {
+			return "$var >= {$db->addQuotes( $start )}";
+		} elseif ( $start === null ) {
+			return "$var <= {$db->addQuotes( $end )}";
+		} else {
+			return "$var BETWEEN {$db->addQuotes( $start )} AND {$db->addQuotes( $end )}";
+		}
 	}
 }
 
 $maintClass = 'RefreshLinks';
-require_once( RUN_MAINTENANCE_IF_MAIN );
+require_once RUN_MAINTENANCE_IF_MAIN;

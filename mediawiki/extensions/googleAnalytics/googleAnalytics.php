@@ -4,64 +4,46 @@ if ( !defined( 'MEDIAWIKI' ) ) {
 }
 
 $wgExtensionCredits['other'][] = array(
-	'path'           => __FILE__,
-	'name'           => 'Google Analytics Integration',
-	'version'        => '2.0.2',
-	'author'         => 'Tim Laqua',
+	'path' => __FILE__,
+	'name' => 'Google Analytics Integration',
+	'version' => '3.0.1',
+	'author' => array( 'Tim Laqua', '[https://www.mediawiki.org/wiki/User:DavisNT Davis Mosenkovs]' ),
 	'descriptionmsg' => 'googleanalytics-desc',
-	'url'            => 'https://www.mediawiki.org/wiki/Extension:Google_Analytics_Integration',
+	'url' => 'https://www.mediawiki.org/wiki/Extension:Google_Analytics_Integration',
 );
 
-$wgExtensionMessagesFiles['googleAnalytics'] = dirname(__FILE__) . '/googleAnalytics.i18n.php';
+$wgMessagesDirs['googleAnalytics'] = __DIR__ . '/i18n';
+$wgExtensionMessagesFiles['googleAnalytics'] = __DIR__ . '/googleAnalytics.i18n.php';
 
-$wgHooks['SkinAfterBottomScripts'][]  = 'efGoogleAnalyticsHookText';
-$wgHooks['ParserAfterTidy'][] = 'efGoogleAnalyticsASAC';
+/*** Default configuration ***/
 
-$wgGoogleAnalyticsAccount = "UA-32768052-1";
-$wgGoogleAnalyticsAddASAC = false;
-$wgGoogleAnalyticsIgnoreSysops = false;
-$wgGoogleAnalyticsIgnoreBots = false;
+// Google Universal Analytics account id (e.g. "UA-12345678-1")
+$wgGoogleAnalyticsAccount = '';
 
-function efGoogleAnalyticsASAC( &$parser, &$text ) {
-	global $wgOut, $wgGoogleAnalyticsAccount, $wgGoogleAnalyticsAddASAC;
+// Don't store last octet (or last 80 bits of IPv6 address) in Google Universal Analytics
+// For more info see https://support.google.com/analytics/answer/2763052?hl=en
+$wgGoogleAnalyticsAnonymizeIP = true;
 
-	if( !empty($wgGoogleAnalyticsAccount) && $wgGoogleAnalyticsAddASAC ) {
-		$wgOut->addScript('<script type="text/javascript">window.google_analytics_uacct = "' . $wgGoogleAnalyticsAccount . '";</script>');
-	}
+// HTML code for other web analytics (can be used along with Google Universal Analytics)
+$wgGoogleAnalyticsOtherCode = '';
 
-	return true;
-}
+// Array with NUMERIC namespace IDs where web analytics code should NOT be included.
+$wgGoogleAnalyticsIgnoreNsIDs = array();
 
-function efGoogleAnalyticsHookText( $skin, &$text='' ) {
-	$text .= efAddGoogleAnalytics();
-	return true;
-}
+// Array with page names (see magic word {{FULLPAGENAME}}) where web analytics code should NOT be included.
+$wgGoogleAnalyticsIgnorePages = array();
 
-function efAddGoogleAnalytics() {
-	global $wgGoogleAnalyticsAccount, $wgGoogleAnalyticsIgnoreSysops, $wgGoogleAnalyticsIgnoreBots, $wgUser;
-	if ( $wgUser->isAllowed( 'bot' ) && $wgGoogleAnalyticsIgnoreBots ) {
-		return "\n<!-- Google Analytics tracking is disabled for bots -->";
-	}
+// Array with special pages where web analytics code should NOT be included.
+$wgGoogleAnalyticsIgnoreSpecials = array( 'Userlogin', 'Userlogout', 'Preferences', 'ChangePassword' );
 
-	if ( $wgUser->isAllowed( 'protect' ) && $wgGoogleAnalyticsIgnoreSysops ) {
-		return "\n<!-- Google Analytics tracking is disabled for users with 'protect' rights (I.E. sysops) -->";
-	}
+/* WARNING! The following options were removed in version 3.0:
+ *   $wgGoogleAnalyticsAddASAC
+ *   $wgGoogleAnalyticsIgnoreSysops
+ *   $wgGoogleAnalyticsIgnoreBots
+ * It is possible (and advised) to use 'noanalytics' permission to exclude specific groups from web analytics. */
 
-	if ( $wgGoogleAnalyticsAccount === '' ) {
-		return "\n<!-- Set \$wgGoogleAnalyticsAccount to your account # provided by Google Analytics. -->";
-	}
+/*****************************/
 
-	return <<<HTML
-<script type="text/javascript">
-var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-</script>
-<script type="text/javascript">
-var pageTracker = _gat._getTracker("{$wgGoogleAnalyticsAccount}");
-pageTracker._trackPageview();
-</script>
-HTML;
-}
-
-///Alias for efAddGoogleAnalytics - backwards compatibility.
-function addGoogleAnalytics() { return efAddGoogleAnalytics(); }
+$wgAutoloadClasses['GoogleAnalyticsHooks'] = __DIR__ . '/googleAnalytics.hooks.php';
+$wgHooks['SkinAfterBottomScripts'][] = 'GoogleAnalyticsHooks::onSkinAfterBottomScripts';
+$wgHooks['UnitTestsList'][] = 'GoogleAnalyticsHooks::onUnitTestsList';

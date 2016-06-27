@@ -1,24 +1,48 @@
 <?php
 /**
- * Contain the ResourceFileCache class
+ * ResourceLoader request result caching in the file system.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
  * @file
+ * @ingroup Cache
+ */
+
+/**
+ * ResourceLoader request result caching in the file system.
+ *
  * @ingroup Cache
  */
 class ResourceFileCache extends FileCacheBase {
 	protected $mCacheWorthy;
 
-	/* @TODO: configurable? */
+	/* @todo configurable? */
 	const MISS_THRESHOLD = 360; // 6/min * 60 min
 
 	/**
 	 * Construct an ResourceFileCache from a context
-	 * @param $context ResourceLoaderContext
+	 * @param ResourceLoaderContext $context
 	 * @return ResourceFileCache
 	 */
 	public static function newFromContext( ResourceLoaderContext $context ) {
 		$cache = new self();
 
-		if ( $context->getOnly() === 'styles' ) {
+		if ( $context->getImage() ) {
+			$cache->mType = 'image';
+		} elseif ( $context->getOnly() === 'styles' ) {
 			$cache->mType = 'css';
 		} else {
 			$cache->mType = 'js';
@@ -36,7 +60,7 @@ class ResourceFileCache extends FileCacheBase {
 	/**
 	 * Check if an RL request can be cached.
 	 * Caller is responsible for checking if any modules are private.
-	 * @param $context ResourceLoaderContext
+	 * @param ResourceLoaderContext $context
 	 * @return bool
 	 */
 	public static function useFileCache( ResourceLoaderContext $context ) {
@@ -47,7 +71,8 @@ class ResourceFileCache extends FileCacheBase {
 		// Get all query values
 		$queryVals = $context->getRequest()->getValues();
 		foreach ( $queryVals as $query => $val ) {
-			if ( $query === 'modules' || $query === 'version' || $query === '*' ) {
+			if ( in_array( $query, array( 'modules', 'image', 'variant', 'version', '*' ) ) ) {
+				// Use file cache regardless of the value of this parameter
 				continue; // note: &* added as IE fix
 			} elseif ( $query === 'skin' && $val === $wgDefaultSkin ) {
 				continue;
@@ -57,9 +82,13 @@ class ResourceFileCache extends FileCacheBase {
 				continue;
 			} elseif ( $query === 'debug' && $val === 'false' ) {
 				continue;
+			} elseif ( $query === 'format' && $val === 'rasterized' ) {
+				continue;
 			}
+
 			return false;
 		}
+
 		return true; // cacheable
 	}
 
@@ -82,6 +111,7 @@ class ResourceFileCache extends FileCacheBase {
 				$this->getMissesRecent() >= self::MISS_THRESHOLD // many misses
 			);
 		}
+
 		return $this->mCacheWorthy;
 	}
 }

@@ -1,5 +1,7 @@
 <?php
 /**
+ * Resource loader module for user customizations.
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -23,34 +25,43 @@
  */
 class ResourceLoaderUserGroupsModule extends ResourceLoaderWikiModule {
 
-	/* Protected Methods */
 	protected $origin = self::ORIGIN_USER_SITEWIDE;
+	protected $targets = array( 'desktop', 'mobile' );
 
 	/**
-	 * @param $context ResourceLoaderContext
+	 * @param ResourceLoaderContext $context
 	 * @return array
 	 */
 	protected function getPages( ResourceLoaderContext $context ) {
-		if ( $context->getUser() ) {
-			$user = User::newFromName( $context->getUser() );
-			if ( $user instanceof User ) {
-				$pages = array();
-				foreach( $user->getEffectiveGroups() as $group ) {
-					if ( in_array( $group, array( '*', 'user' ) ) ) {
-						continue;
-					}
-					$pages["MediaWiki:Group-$group.js"] = array( 'type' => 'script' );
-					$pages["MediaWiki:Group-$group.css"] = array( 'type' => 'style' );
-				}
-				return $pages;
+		$useSiteJs = $this->getConfig()->get( 'UseSiteJs' );
+		$useSiteCss = $this->getConfig()->get( 'UseSiteCss' );
+		if ( !$useSiteJs && !$useSiteCss ) {
+			return array();
+		}
+
+		$user = $context->getUserObj();
+		if ( !$user || $user->isAnon() ) {
+			return array();
+		}
+
+		$pages = array();
+		foreach ( $user->getEffectiveGroups() as $group ) {
+			if ( $group == '*' ) {
+				continue;
+			}
+			if ( $useSiteJs ) {
+				$pages["MediaWiki:Group-$group.js"] = array( 'type' => 'script' );
+			}
+			if ( $useSiteCss ) {
+				$pages["MediaWiki:Group-$group.css"] = array( 'type' => 'style' );
 			}
 		}
-		return array();
+		return $pages;
 	}
 
-	/* Methods */
-
 	/**
+	 * Get group name
+	 *
 	 * @return string
 	 */
 	public function getGroup() {

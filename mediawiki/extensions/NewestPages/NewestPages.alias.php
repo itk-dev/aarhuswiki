@@ -5,6 +5,7 @@
  * @file
  * @ingroup Extensions
  */
+// @codingStandardsIgnoreFile
 
 $specialPageAliases = array();
 
@@ -23,7 +24,7 @@ $specialPageAliases['ar'] = array(
 	'NewestPages' => array( 'أجدد_الصفحات' ),
 );
 
-/** Egyptian Spoken Arabic (مصرى) */
+/** Egyptian Arabic (مصرى) */
 $specialPageAliases['arz'] = array(
 	'NewestPages' => array( 'اجدد_الصفح' ),
 );
@@ -31,6 +32,11 @@ $specialPageAliases['arz'] = array(
 /** Bulgarian (български) */
 $specialPageAliases['bg'] = array(
 	'NewestPages' => array( 'Най-нови_страници' ),
+);
+
+/** Western Balochi (بلوچی رخشانی) */
+$specialPageAliases['bgn'] = array(
+	'NewestPages' => array( 'تازه_گین_تاکذیمان' ),
 );
 
 /** Banjar (Bahasa Banjar) */
@@ -60,7 +66,7 @@ $specialPageAliases['de'] = array(
 
 /** Zazaki (Zazaki) */
 $specialPageAliases['diq'] = array(
-	'NewestPages' => array( 'PeleyêTewrNewey' ),
+	'NewestPages' => array( 'PelêTewrNeweyi' ),
 );
 
 /** Lower Sorbian (dolnoserbski) */
@@ -71,6 +77,16 @@ $specialPageAliases['dsb'] = array(
 /** Greek (Ελληνικά) */
 $specialPageAliases['el'] = array(
 	'NewestPages' => array( 'ΝεότερεςΣελίδες' ),
+);
+
+/** Esperanto (Esperanto) */
+$specialPageAliases['eo'] = array(
+	'NewestPages' => array( 'Plej_novaj_paĝoj' ),
+);
+
+/** Spanish (español) */
+$specialPageAliases['es'] = array(
+	'NewestPages' => array( 'Páginas_más_nuevas' ),
 );
 
 /** Persian (فارسی) */
@@ -88,7 +104,7 @@ $specialPageAliases['fr'] = array(
 	'NewestPages' => array( 'Pages_les_plus_récentes', 'PagesLesPlusRécentes' ),
 );
 
-/** Franco-Provençal (arpetan) */
+/** Arpitan (arpetan) */
 $specialPageAliases['frp'] = array(
 	'NewestPages' => array( 'Pâges_les_ples_novèles', 'PâgesLesPlesNovèles' ),
 );
@@ -101,6 +117,16 @@ $specialPageAliases['gl'] = array(
 /** Swiss German (Alemannisch) */
 $specialPageAliases['gsw'] = array(
 	'NewestPages' => array( 'Neijeschti_Syte' ),
+);
+
+/** Hebrew (עברית) */
+$specialPageAliases['he'] = array(
+	'NewestPages' => array( 'דפים_חדשים_ביותר' ),
+);
+
+/** Hindi (हिन्दी) */
+$specialPageAliases['hi'] = array(
+	'NewestPages' => array( 'नवीनतम_पृष्ठ' ),
 );
 
 /** Croatian (hrvatski) */
@@ -165,7 +191,7 @@ $specialPageAliases['ku'] = array(
 
 /** Cornish (kernowek) */
 $specialPageAliases['kw'] = array(
-	'NewestPages' => array( 'FolednowNowyttha' ),
+	'NewestPages' => array( 'FolennowNowyttha' ),
 );
 
 /** Ladino (Ladino) */
@@ -175,7 +201,7 @@ $specialPageAliases['lad'] = array(
 
 /** Luxembourgish (Lëtzebuergesch) */
 $specialPageAliases['lb'] = array(
-	'NewestPages' => array( 'Neiste_Säiten' ),
+	'NewestPages' => array( 'Neist_Säiten' ),
 );
 
 /** Macedonian (македонски) */
@@ -198,7 +224,7 @@ $specialPageAliases['mt'] = array(
 	'NewestPages' => array( 'PaġniRiċenti' ),
 );
 
-/** Norwegian Bokmål (‪norsk (bokmål)‬) */
+/** Norwegian Bokmål (norsk bokmål) */
 $specialPageAliases['nb'] = array(
 	'NewestPages' => array( 'Siste_sider', 'Nyeste_sider' ),
 );
@@ -208,9 +234,9 @@ $specialPageAliases['nds'] = array(
 	'NewestPages' => array( 'Neeste Sieden' ),
 );
 
-/** Nedersaksisch (Nedersaksisch) */
+/** Low Saxon (Netherlands) (Nedersaksies) */
 $specialPageAliases['nds-nl'] = array(
-	'NewestPages' => array( 'Niejste_pagina\'s' ),
+	'NewestPages' => array( 'Niejste_ziejen' ),
 );
 
 /** Dutch (Nederlands) */
@@ -263,6 +289,11 @@ $specialPageAliases['sq'] = array(
 	'NewestPages' => array( 'FaqetMëTëReja' ),
 );
 
+/** Serbian (Cyrillic script) (српски (ћирилица)‎) */
+$specialPageAliases['sr-ec'] = array(
+	'NewestPages' => array( 'НајновијеСтранице', 'НајновијаСтраница' ),
+);
+
 /** Swedish (svenska) */
 $specialPageAliases['sv'] = array(
 	'NewestPages' => array( 'Nyaste_sidor' ),
@@ -293,17 +324,37 @@ $specialPageAliases['tr'] = array(
 	'NewestPages' => array( 'EnYeniSayfalar' ),
 );
 
-/** vèneto (vèneto) */
+/** Ukrainian (українська) */
+$specialPageAliases['uk'] = array(
+	'NewestPages' => array( 'Найновіші_сторінки' ),
+);
+
+/** Urdu (اردو) */
+$specialPageAliases['ur'] = array(
+	'NewestPages' => array( 'نئے_صفحات' ),
+);
+
+/** Venetian (vèneto) */
 $specialPageAliases['vec'] = array(
 	'NewestPages' => array( 'PaginePiNove' ),
 );
 
-/** Simplified Chinese (‪中文（简体）‬) */
+/** Vietnamese (Tiếng Việt) */
+$specialPageAliases['vi'] = array(
+	'NewestPages' => array( 'Trang_mới_nhất' ),
+);
+
+/** Yiddish (ייִדיש) */
+$specialPageAliases['yi'] = array(
+	'NewestPages' => array( 'נייעסטע_בלעטער' ),
+);
+
+/** Simplified Chinese (中文（简体）‎) */
 $specialPageAliases['zh-hans'] = array(
 	'NewestPages' => array( '最新页面' ),
 );
 
-/** Traditional Chinese (‪中文（繁體）‬) */
+/** Traditional Chinese (中文（繁體）‎) */
 $specialPageAliases['zh-hant'] = array(
 	'NewestPages' => array( '最新頁面' ),
 );

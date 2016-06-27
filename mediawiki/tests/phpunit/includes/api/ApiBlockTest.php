@@ -1,16 +1,19 @@
 <?php
 
 /**
+ * @group API
  * @group Database
+ * @group medium
+ *
+ * @covers ApiBlock
  */
 class ApiBlockTest extends ApiTestCase {
-
-	function setUp() {
+	protected function setUp() {
 		parent::setUp();
 		$this->doLogin();
 	}
 
-	function getTokens() {
+	protected function getTokens() {
 		return $this->getTokenList( self::$users['sysop'] );
 	}
 
@@ -32,12 +35,9 @@ class ApiBlockTest extends ApiTestCase {
 	 * Root cause is https://gerrit.wikimedia.org/r/3434
 	 * Which made the Block/Unblock API to actually verify the token
 	 * previously always considered valid (bug 34212).
-	 *
-	 * @group Broken
 	 */
-	function testMakeNormalBlock() {
-
-		$data = $this->getTokens();
+	public function testMakeNormalBlock() {
+		$tokens = $this->getTokens();
 
 		$user = User::newFromName( 'UTApiBlockee' );
 
@@ -45,28 +45,39 @@ class ApiBlockTest extends ApiTestCase {
 			$this->markTestIncomplete( "The user UTApiBlockee does not exist" );
 		}
 
-		if( !isset( $data[0]['query']['pages'] ) ) {
+		if ( !array_key_exists( 'blocktoken', $tokens ) ) {
 			$this->markTestIncomplete( "No block token found" );
 		}
 
-		$keys = array_keys( $data[0]['query']['pages'] );
-		$key = array_pop( $keys );
-		$pageinfo = $data[0]['query']['pages'][$key];
-
-		$data = $this->doApiRequest( array(
+		$this->doApiRequest( array(
 			'action' => 'block',
 			'user' => 'UTApiBlockee',
 			'reason' => 'Some reason',
-			'token' => $pageinfo['blocktoken'] ), $data, false, self::$users['sysop']->user );
+			'token' => $tokens['blocktoken'] ), null, false, self::$users['sysop']->getUser() );
 
-		$block = Block::newFromTarget('UTApiBlockee');
+		$block = Block::newFromTarget( 'UTApiBlockee' );
 
 		$this->assertTrue( !is_null( $block ), 'Block is valid' );
 
 		$this->assertEquals( 'UTApiBlockee', (string)$block->getTarget() );
 		$this->assertEquals( 'Some reason', $block->mReason );
 		$this->assertEquals( 'infinity', $block->mExpiry );
-
 	}
 
+	/**
+	 * @expectedException UsageException
+	 * @expectedExceptionMessage The token parameter must be set
+	 */
+	public function testBlockingActionWithNoToken() {
+		$this->doApiRequest(
+			array(
+				'action' => 'block',
+				'user' => 'UTApiBlockee',
+				'reason' => 'Some reason',
+			),
+			null,
+			false,
+			self::$users['sysop']->getUser()
+		);
+	}
 }

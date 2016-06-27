@@ -4,7 +4,7 @@
  *
  * Created on Jan 4, 2008
  *
- * Copyright © 2008 Yuri Astrakhan <Firstname><Lastname>@gmail.com,
+ * Copyright © 2008 Yuri Astrakhan "<Firstname><Lastname>@gmail.com",
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,10 +32,6 @@
  */
 class ApiLogout extends ApiBase {
 
-	public function __construct( $main, $action ) {
-		parent::__construct( $main, $action );
-	}
-
 	public function execute() {
 		$user = $this->getUser();
 		$oldName = $user->getName();
@@ -43,36 +39,21 @@ class ApiLogout extends ApiBase {
 
 		// Give extensions to do something after user logout
 		$injected_html = '';
-		wfRunHooks( 'UserLogoutComplete', array( &$user, &$injected_html, $oldName ) );
+		Hooks::run( 'UserLogoutComplete', array( &$user, &$injected_html, $oldName ) );
 	}
 
 	public function isReadMode() {
 		return false;
 	}
 
-	public function getAllowedParams() {
-		return array();
-	}
-
-	public function getParamDescription() {
-		return array();
-	}
-
-	public function getDescription() {
-		return 'Log out and clear session data';
-	}
-
-	public function getExamples() {
+	protected function getExamplesMessages() {
 		return array(
-			'api.php?action=logout' => 'Log the current user out',
+			'action=logout'
+				=> 'apihelp-logout-example-logout',
 		);
 	}
 
 	public function getHelpUrls() {
 		return 'https://www.mediawiki.org/wiki/API:Logout';
-	}
-
-	public function getVersion() {
-		return __CLASS__ . ': $Id$';
 	}
 }

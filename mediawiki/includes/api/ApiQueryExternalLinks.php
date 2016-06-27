@@ -4,7 +4,7 @@
  *
  * Created on May 13, 2007
  *
- * Copyright © 2006 Yuri Astrakhan <Firstname><Lastname>@gmail.com
+ * Copyright © 2006 Yuri Astrakhan "<Firstname><Lastname>@gmail.com"
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
  */
 class ApiQueryExternalLinks extends ApiQueryBase {
 
-	public function __construct( $query, $moduleName ) {
+	public function __construct( ApiQuery $query, $moduleName ) {
 		parent::__construct( $query, $moduleName, 'el' );
 	}
 
@@ -86,8 +86,12 @@ class ApiQueryExternalLinks extends ApiQueryBase {
 				break;
 			}
 			$entry = array();
-			// We *could* run this through wfExpandUrl() but I think it's better to output the link verbatim, even if it's protocol-relative --Roan
-			ApiResult::setContent( $entry, $row->el_to );
+			$to = $row->el_to;
+			// expand protocol-relative urls
+			if ( $params['expandurl'] ) {
+				$to = wfExpandUrl( $to, PROTO_CANONICAL );
+			}
+			ApiResult::setContentValue( $entry, 'url', $to );
 			$fit = $this->addPageSubItem( $row->el_from, $entry );
 			if ( !$fit ) {
 				$this->setContinueEnumParameter( 'offset', $offset + $count - 1 );
@@ -110,50 +114,26 @@ class ApiQueryExternalLinks extends ApiQueryBase {
 				ApiBase::PARAM_MAX2 => ApiBase::LIMIT_BIG2
 			),
 			'offset' => array(
-				ApiBase::PARAM_TYPE => 'integer'
+				ApiBase::PARAM_TYPE => 'integer',
+				ApiBase::PARAM_HELP_MSG => 'api-help-param-continue',
 			),
 			'protocol' => array(
 				ApiBase::PARAM_TYPE => ApiQueryExtLinksUsage::prepareProtocols(),
 				ApiBase::PARAM_DFLT => '',
 			),
 			'query' => null,
+			'expandurl' => false,
 		);
 	}
 
-	public function getParamDescription() {
-		$p = $this->getModulePrefix();
+	protected function getExamplesMessages() {
 		return array(
-			'limit' => 'How many links to return',
-			'offset' => 'When more results are available, use this to continue',
-			'protocol' => array(
-				"Protocol of the url. If empty and {$p}query set, the protocol is http.",
-				"Leave both this and {$p}query empty to list all external links"
-			),
-			'query' => 'Search string without protocol. Useful for checking whether a certain page contains a certain external url',
-		);
-	}
-
-	public function getDescription() {
-		return 'Returns all external urls (not interwikies) from the given page(s)';
-	}
-
-	public function getPossibleErrors() {
-		return array_merge( parent::getPossibleErrors(), array(
-			array( 'code' => 'bad_query', 'info' => 'Invalid query' ),
-		) );
-	}
-
-	public function getExamples() {
-		return array(
-			'api.php?action=query&prop=extlinks&titles=Main%20Page' => 'Get a list of external links on the [[Main Page]]',
+			'action=query&prop=extlinks&titles=Main%20Page'
+				=> 'apihelp-query+extlinks-example-simple',
 		);
 	}
 
 	public function getHelpUrls() {
-		return 'https://www.mediawiki.org/wiki/API:Properties#extlinks_.2F_el';
-	}
-
-	public function getVersion() {
-		return __CLASS__ . ': $Id$';
+		return 'https://www.mediawiki.org/wiki/API:Extlinks';
 	}
 }

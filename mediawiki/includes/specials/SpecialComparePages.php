@@ -43,17 +43,19 @@ class SpecialComparePages extends SpecialPage {
 	/**
 	 * Show a form for filtering namespace and username
 	 *
-	 * @param $par String
-	 * @return String
+	 * @param string $par
+	 * @return string
 	 */
 	public function execute( $par ) {
 		$this->setHeaders();
 		$this->outputHeader();
 
+		# Form (.mw-searchInput enables suggestions)
 		$form = new HTMLForm( array(
 			'Page1' => array(
 				'type' => 'text',
 				'name' => 'page1',
+				'cssclass' => 'mw-searchInput',
 				'label-message' => 'compare-page1',
 				'size' => '40',
 				'section' => 'page1',
@@ -70,6 +72,7 @@ class SpecialComparePages extends SpecialPage {
 			'Page2' => array(
 				'type' => 'text',
 				'name' => 'page2',
+				'cssclass' => 'mw-searchInput',
 				'label-message' => 'compare-page2',
 				'size' => '40',
 				'section' => 'page2',
@@ -106,31 +109,37 @@ class SpecialComparePages extends SpecialPage {
 		$form->trySubmit();
 	}
 
-	public static function showDiff( $data, HTMLForm $form ){
+	public static function showDiff( $data, HTMLForm $form ) {
 		$rev1 = self::revOrTitle( $data['Revision1'], $data['Page1'] );
 		$rev2 = self::revOrTitle( $data['Revision2'], $data['Page2'] );
 
-		if( $rev1 && $rev2 ) {
-			$de = new DifferenceEngine( $form->getContext(),
-				$rev1,
-				$rev2,
-				null, // rcid
-				( $data['Action'] == 'purge' ),
-				( $data['Unhide'] == '1' )
-			);
-			$de->showDiffPage( true );
+		if ( $rev1 && $rev2 ) {
+			$revision = Revision::newFromId( $rev1 );
+
+			if ( $revision ) { // NOTE: $rev1 was already checked, should exist.
+				$contentHandler = $revision->getContentHandler();
+				$de = $contentHandler->createDifferenceEngine( $form->getContext(),
+					$rev1,
+					$rev2,
+					null, // rcid
+					( $data['Action'] == 'purge' ),
+					( $data['Unhide'] == '1' )
+				);
+				$de->showDiffPage( true );
+			}
 		}
 	}
 
 	public static function revOrTitle( $revision, $title ) {
-		if( $revision ){
+		if ( $revision ) {
 			return $revision;
-		} elseif( $title ) {
+		} elseif ( $title ) {
 			$title = Title::newFromText( $title );
-			if( $title instanceof Title ){
+			if ( $title instanceof Title ) {
 				return $title->getLatestRevID();
 			}
 		}
+
 		return null;
 	}
 
@@ -145,6 +154,7 @@ class SpecialComparePages extends SpecialPage {
 		if ( !$title->exists() ) {
 			return $this->msg( 'compare-title-not-exists' )->parseAsBlock();
 		}
+
 		return true;
 	}
 
@@ -156,6 +166,11 @@ class SpecialComparePages extends SpecialPage {
 		if ( $revision === null ) {
 			return $this->msg( 'compare-revision-not-exists' )->parseAsBlock();
 		}
+
 		return true;
+	}
+
+	protected function getGroupName() {
+		return 'pagetools';
 	}
 }

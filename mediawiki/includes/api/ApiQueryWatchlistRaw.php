@@ -4,7 +4,7 @@
  *
  * Created on Oct 4, 2008
  *
- * Copyright © 2008 Roan Kattouw <Firstname>.<Lastname>@gmail.com
+ * Copyright © 2008 Roan Kattouw "<Firstname>.<Lastname>@gmail.com"
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
  */
 class ApiQueryWatchlistRaw extends ApiQueryGeneratorBase {
 
-	public function __construct( $query, $moduleName ) {
+	public function __construct( ApiQuery $query, $moduleName ) {
 		parent::__construct( $query, $moduleName, 'wr' );
 	}
 
@@ -45,7 +45,7 @@ class ApiQueryWatchlistRaw extends ApiQueryGeneratorBase {
 	}
 
 	/**
-	 * @param $resultPageSet ApiPageSet
+	 * @param ApiPageSet $resultPageSet
 	 * @return void
 	 */
 	private function run( $resultPageSet = null ) {
@@ -71,24 +71,49 @@ class ApiQueryWatchlistRaw extends ApiQueryGeneratorBase {
 
 		if ( isset( $params['continue'] ) ) {
 			$cont = explode( '|', $params['continue'] );
-			if ( count( $cont ) != 2 ) {
-				$this->dieUsage( "Invalid continue param. You should pass the " .
-					"original value returned by the previous query", "_badcontinue" );
-			}
+			$this->dieContinueUsageIf( count( $cont ) != 2 );
 			$ns = intval( $cont[0] );
-			$title = $this->getDB()->strencode( $this->titleToKey( $cont[1] ) );
+			$this->dieContinueUsageIf( strval( $ns ) !== $cont[0] );
+			$title = $this->getDB()->addQuotes( $cont[1] );
+			$op = $params['dir'] == 'ascending' ? '>' : '<';
 			$this->addWhere(
-				"wl_namespace > '$ns' OR " .
-				"(wl_namespace = '$ns' AND " .
-				"wl_title >= '$title')"
+				"wl_namespace $op $ns OR " .
+				"(wl_namespace = $ns AND " .
+				"wl_title $op= $title)"
 			);
 		}
 
+		if ( isset( $params['fromtitle'] ) ) {
+			list( $ns, $title ) = $this->prefixedTitlePartToKey( $params['fromtitle'] );
+			$title = $this->getDB()->addQuotes( $title );
+			$op = $params['dir'] == 'ascending' ? '>' : '<';
+			$this->addWhere(
+				"wl_namespace $op $ns OR " .
+				"(wl_namespace = $ns AND " .
+				"wl_title $op= $title)"
+			);
+		}
+
+		if ( isset( $params['totitle'] ) ) {
+			list( $ns, $title ) = $this->prefixedTitlePartToKey( $params['totitle'] );
+			$title = $this->getDB()->addQuotes( $title );
+			$op = $params['dir'] == 'ascending' ? '<' : '>'; // Reversed from above!
+			$this->addWhere(
+				"wl_namespace $op $ns OR " .
+				"(wl_namespace = $ns AND " .
+				"wl_title $op= $title)"
+			);
+		}
+
+		$sort = ( $params['dir'] == 'descending' ? ' DESC' : '' );
 		// Don't ORDER BY wl_namespace if it's constant in the WHERE clause
 		if ( count( $params['namespace'] ) == 1 ) {
-			$this->addOption( 'ORDER BY', 'wl_title' );
+			$this->addOption( 'ORDER BY', 'wl_title' . $sort );
 		} else {
-			$this->addOption( 'ORDER BY', 'wl_namespace, wl_title' );
+			$this->addOption( 'ORDER BY', array(
+				'wl_namespace' . $sort,
+				'wl_title' . $sort
+			) );
 		}
 		$this->addOption( 'LIMIT', $params['limit'] + 1 );
 		$res = $this->select( __METHOD__ );
@@ -97,9 +122,9 @@ class ApiQueryWatchlistRaw extends ApiQueryGeneratorBase {
 		$count = 0;
 		foreach ( $res as $row ) {
 			if ( ++$count > $params['limit'] ) {
-				// We've reached the one extra which shows that there are additional pages to be had. Stop here...
-				$this->setContinueEnumParameter( 'continue', $row->wl_namespace . '|' .
-									$this->keyToTitle( $row->wl_title ) );
+				// We've reached the one extra which shows that there are
+				// additional pages to be had. Stop here...
+				$this->setContinueEnumParameter( 'continue', $row->wl_namespace . '|' . $row->wl_title );
 				break;
 			}
 			$t = Title::makeTitle( $row->wl_namespace, $row->wl_title );
@@ -107,14 +132,12 @@ class ApiQueryWatchlistRaw extends ApiQueryGeneratorBase {
 			if ( is_null( $resultPageSet ) ) {
 				$vals = array();
 				ApiQueryBase::addTitleInfo( $vals, $t );
-				if ( isset( $prop['changed'] ) && !is_null( $row->wl_notificationtimestamp ) )
-				{
+				if ( isset( $prop['changed'] ) && !is_null( $row->wl_notificationtimestamp ) ) {
 					$vals['changed'] = wfTimestamp( TS_ISO_8601, $row->wl_notificationtimestamp );
 				}
 				$fit = $this->getResult()->addValue( $this->getModuleName(), null, $vals );
 				if ( !$fit ) {
-					$this->setContinueEnumParameter( 'continue', $row->wl_namespace . '|' .
-									$this->keyToTitle( $row->wl_title ) );
+					$this->setContinueEnumParameter( 'continue', $row->wl_namespace . '|' . $row->wl_title );
 					break;
 				}
 			} else {
@@ -122,7 +145,7 @@ class ApiQueryWatchlistRaw extends ApiQueryGeneratorBase {
 			}
 		}
 		if ( is_null( $resultPageSet ) ) {
-			$this->getResult()->setIndexedTagName_internal( $this->getModuleName(), 'wr' );
+			$this->getResult()->addIndexedTagName( $this->getModuleName(), 'wr' );
 		} else {
 			$resultPageSet->populateFromTitles( $titles );
 		}
@@ -130,7 +153,9 @@ class ApiQueryWatchlistRaw extends ApiQueryGeneratorBase {
 
 	public function getAllowedParams() {
 		return array(
-			'continue' => null,
+			'continue' => array(
+				ApiBase::PARAM_HELP_MSG => 'api-help-param-continue',
+			),
 			'namespace' => array(
 				ApiBase::PARAM_ISMULTI => true,
 				ApiBase::PARAM_TYPE => 'namespace'
@@ -146,7 +171,8 @@ class ApiQueryWatchlistRaw extends ApiQueryGeneratorBase {
 				ApiBase::PARAM_ISMULTI => true,
 				ApiBase::PARAM_TYPE => array(
 					'changed',
-				)
+				),
+				ApiBase::PARAM_HELP_MSG_PER_VALUE => array(),
 			),
 			'show' => array(
 				ApiBase::PARAM_ISMULTI => true,
@@ -160,46 +186,34 @@ class ApiQueryWatchlistRaw extends ApiQueryGeneratorBase {
 			),
 			'token' => array(
 				ApiBase::PARAM_TYPE => 'string'
-			)
-		);
-	}
-
-	public function getParamDescription() {
-		return array(
-			'continue' => 'When more results are available, use this to continue',
-			'namespace' => 'Only list pages in the given namespace(s)',
-			'limit' => 'How many total results to return per request',
-			'prop' => array(
-				'Which additional properties to get (non-generator mode only)',
-				' changed  - Adds timestamp of when the user was last notified about the edit',
 			),
-			'show' => 'Only list items that meet these criteria',
-			'owner' => 'The name of the user whose watchlist you\'d like to access',
-			'token' => 'Give a security token (settable in preferences) to allow access to another user\'s watchlist',
+			'dir' => array(
+				ApiBase::PARAM_DFLT => 'ascending',
+				ApiBase::PARAM_TYPE => array(
+					'ascending',
+					'descending'
+				),
+				ApiBase::PARAM_HELP_MSG => 'api-help-param-direction',
+			),
+			'fromtitle' => array(
+				ApiBase::PARAM_TYPE => 'string'
+			),
+			'totitle' => array(
+				ApiBase::PARAM_TYPE => 'string'
+			),
 		);
 	}
 
-	public function getDescription() {
-		return "Get all pages on the logged in user's watchlist";
-	}
-
-	public function getPossibleErrors() {
-		return array_merge( parent::getPossibleErrors(), array(
-			array( 'code' => 'notloggedin', 'info' => 'You must be logged-in to have a watchlist' ),
-			array( 'show' ),
-			array( 'code' => 'bad_wlowner', 'info' => 'Specified user does not exist' ),
-			array( 'code' => 'bad_wltoken', 'info' => 'Incorrect watchlist token provided -- please set a correct token in Special:Preferences' ),
-		) );
-	}
-
-	public function getExamples() {
+	protected function getExamplesMessages() {
 		return array(
-			'api.php?action=query&list=watchlistraw',
-			'api.php?action=query&generator=watchlistraw&gwrshow=changed&prop=revisions',
+			'action=query&list=watchlistraw'
+				=> 'apihelp-query+watchlistraw-example-simple',
+			'action=query&generator=watchlistraw&gwrshow=changed&prop=info'
+				=> 'apihelp-query+watchlistraw-example-generator',
 		);
 	}
 
-	public function getVersion() {
-		return __CLASS__ . ': $Id$';
+	public function getHelpUrls() {
+		return 'https://www.mediawiki.org/wiki/API:Watchlistraw';
 	}
 }

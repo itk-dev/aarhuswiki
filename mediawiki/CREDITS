@@ -1,24 +1,34 @@
-MediaWiki 1.19 is a collaborative project released under the
+{{int:version-credits-summary}}
+<!--
+MediaWiki 1.26 is a collaborative project released under the
 GNU General Public License v2. We would like to recognize the
 following names for their contribution to the product.
+-->
+<!-- Please notice that the following can be found parsed under Special:Version/Credits -->
 
 == Developers ==
 * Aaron Schulz
 * Alex Z.
+* Alexander Monk
 * Alexandre Emsenhuber
 * Andrew Garrett
+* Antoine Musso
+* Arthur Richards
 * Aryeh Gregor
-* Antoine Musso 
-* Brian Wolff
+* Bartosz Dziewoński
 * Bertrand Grondin
 * Brad Jorsch
+* Brian Wolff
 * Brion Vibber
+* Bryan Davis
 * Bryan Tong Minh
 * Chad Horohoe
 * Charles Melbye
+* Chris Steipp
 * church of emacs
 * Daniel Friesen
 * Daniel Kinzler
+* Daniel Renfro
 * Danny B.
 * David McCabe
 * Derk-Jan Hartman
@@ -33,6 +43,8 @@ following names for their contribution to the product.
 * Ilmari Karonen
 * Jack D. Pond
 * Jack Phoenix
+* Jackmcbarn
+* James Forrester
 * Jan Paul Posma
 * Jason Richey
 * Jeroen De Dauw
@@ -43,8 +55,10 @@ following names for their contribution to the product.
 * Leon Weber
 * Leslie Hoare
 * Marco Schuster
+* Marius Hoch
 * Matěj Grabovský
 * Matt Johnston
+* Matthew Flaschen
 * Max Semenik
 * Meno25
 * MinuteElectron
@@ -53,6 +67,8 @@ following names for their contribution to the product.
 * Neil Kandalgaonkar
 * Nicolas Dumazet
 * Niklas Laxström
+* Ori Livneh
+* Patrick Reilly
 * Philip Tzou
 * Platonides
 * Purodha Blissenbach
@@ -62,23 +78,29 @@ following names for their contribution to the product.
 * Robert Stojnić
 * Robin Pepermans
 * Rotem Liss
+* Ryan Kaldari
 * Ryan Lane
 * Ryan Schmidt
 * Sam Reed
 * Shinjiman
 * Siebrand Mazeland
-* SQL
 * Soxred93
+* SQL
+* Szymon Świerkosz
+* This, that and the other
 * Thomas Bleher
+* Thomas Gries
 * Tim Starling
 * Timo Tijhof
-* Tom Gries
 * Trevor Parscal
+* Tyler Anthony Romeo
 * Victor Vasiliev
 * Yesid Carrillo
 * Yuri Astrakhan
 
 == Patch Contributors ==
+* Aaron Ball
+* Aaron Pramana
 * Agbad
 * Ahmad Sherif
 * Alejandro Mery
@@ -86,53 +108,80 @@ following names for their contribution to the product.
 * Amir E. Aharoni
 * Andrew Dunbar
 * Antonio Ospite
+* Asier Lostalé
 * Azliq7
+* Bagariavivek
 * Beau
+* Benny Situ
 * Bergi
 * Borislav Manolov
-* Brad Jorsch
 * Brent G
 * Brianna Laugher
 * Carlin
 * Carsten Nielsen
+* Christian Aistleitner
+* Christian Neubauer
 * Conrad Irwin
 * cryptocoryne
 * Dan Barrett
 * Dan Collins
 * Dan Nessett
 * Daniel Arnold
+* Daniel Werner
 * David Baumgarten
 * Denny Vrandecic
+* Dévai Tamás
+* Ebrahim Byagowi
 * Edward Z. Yang
+* Elvis Stansvik
+* Eranroz
 * Erwin Dokter
-* FunPika
+* Étienne Beaulé
+* Federico Leva
 * fomafix
+* FunPika
+* Gabriel Wicke
+* Geoffrey Mon
 * Gero Scholz
 * Gilles van den Hoven
 * Grunny
 * Harry Burt
 * Ireas
+* Jacob Block
+* Jan Gerber
+* Jan Luca Naumann
 * Jaska Zedlik
 * Jeremy Baron
 * Jidanni
 * Jimmy Xu
+* John N
 * Jonathan Wiltshire
-* Karun Dambietz
+* JuneHyeon Bae
+* Jure Kajzer
+* Karun Dambiec
+* Katie Filbert
+* Kevin Israel
 * Kim Hyun-Joon
 * Lee Worden
 * Lejonel
+* Leon Liesener
 * liangent
 * Louperivois
 * Lucas Garczewski
 * Luigi Corsaro
 * Lupo
+* Madman
 * Manuel Menal
+* Marc-André Pelletier
 * Marcin Cieślak
 * Marcus Buck
+* Mark Hershberger
+* Mark Holmquist
 * Marooned
 * Mathias Ertl
-* Matthew Britton
 * mati
+* Matthew Britton
+* Matthias Mullie
 * Max
 * Max Sikström
 * merl
@@ -142,36 +191,50 @@ following names for their contribution to the product.
 * Michael Newton
 * Michael Walsh
 * Mike Horvath
+* moejoe0000
 * Mormegil
 * MrBlueSky
 * MrPete
-* MZMcBride
 * mybugs.mail
+* MZMcBride
 * Nakon
 * Nathan Larson
 * nephele
 * Nik
-* Nx.devnull
 * Nikola Kovacs
 * Nikolaos S. Karastathis
+* Nischay Nahata
+* Nx.devnull
 * Olaf Lenz
 * Olivier Finlay Beaton
+* Patricio Molina
 * Paul Copperman
 * Paul Oranje
+* Peter Gehres
+* Petr Onderka
 * PieRRoMaN
 * quietust
 * René Kijewski
 * rgcjonas
+* Rob Moen
 * Robert Treat
 * RockMFR
+* Russell Blau
 * Rusty Burchfield
+* S Page
 * Salvatore Ingala
+* Santhosh Thottingal
 * Scott Colcord
+* se4598
+* Sébastien Santoro
 * Simon Walker
 * Solitarius
 * Søren Løvborg
+* Southparkfan
+* Srikanth Lakshmanan
 * Stefano Codari
 * Str4nd
+* Subramanya Sastry
 * svip
 * The Evil IP address
 * Tim Landscheidt
@@ -180,15 +243,13 @@ following names for their contribution to the product.
 * Van de Bugger
 * Ville Stadista
 * Vitaliy Filippov
+* Vivek Ghaisas
+* Waldir Pimenta
 * William Demchick
-* Yuvaraj Pandian T
+* Yusuke Matsubara
+* Yuvi Panda
 * Zachary Hauri
 
 == Translators ==
-* Anders Wegge Jakobsen
-* Hk kng
-* Hojjat
-* Meno25
-* Rotem Liss
-* Shinjiman
-* Translatewiki.net Translators http://translatewiki.net/wiki/Special:ListUsers/translator
+
+* [https://translatewiki.net/wiki/Translating:MediaWiki/Credits Translators on translatewiki.net and others]
