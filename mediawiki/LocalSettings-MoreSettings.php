@@ -21,7 +21,7 @@ $wgDefaultSkin = "cavendishmw";
 require_once("$IP/skins/cavendishmw/cavendishmw.php");
 ## CAVENDISH SETTINGS
 $cavendishLogoURL = '';
-$cavendishLogoMargin = '10';
+$cavendishLogoMargin = '0';
 
 # GoogleAnalytics
 include("$IP/extensions/googleAnalytics/googleAnalytics.php" );
