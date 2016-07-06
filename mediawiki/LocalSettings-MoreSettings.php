@@ -19,7 +19,7 @@ wfLoadSkin( 'MonoBook' );
 wfLoadSkin( 'Vector' );
 
 # New responsive skin
-require_once( "$IP/skins/filament/filament.php" );
+# require_once( "$IP/skins/filament/filament.php" );
 
 
 $wgDefaultSkin = "cavendishmw";
