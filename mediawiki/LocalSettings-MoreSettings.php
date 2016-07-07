@@ -27,6 +27,10 @@ $cavendishLogoMargin = '0';
 include("$IP/extensions/googleAnalytics/googleAnalytics.php" );
 $wgGoogleAnalyticsAccount = 'UA-32768052-1';
 
+# MobileFrontend
+require_once "$IP/extensions/MobileFrontend/MobileFrontend.php";
+$wgMFAutodetectMobileView = true;
+
 # NewestPages
 include("$IP/extensions/NewestPages/NewestPages.php" );
 
